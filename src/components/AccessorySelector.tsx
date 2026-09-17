@@ -46,35 +46,36 @@ export const AccessorySelector: React.FC<AccessorySelectorProps> = ({
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex bg-[#161722] p-1 rounded-xl border border-[#292b3a]">
+      <div className="flex bg-[#161824] p-1 rounded-xl border border-[#292b3a]">
         {[
-          { id: 'all', name: 'Tất Cả' },
-          { id: 'traditional', name: 'Truyền Thống Cổ Xưa' },
-          { id: 'remix', name: 'Gen Z Remix' },
+          { id: 'all', name: 'Tất Cả', shortName: 'Tất Cả' },
+          { id: 'traditional', name: 'Truyền Thống Cổ Xưa', shortName: 'Cổ Phong' },
+          { id: 'remix', name: 'Gen Z Remix', shortName: 'Remix' },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id as any)}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 min-h-[36px] py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
               filter === tab.id
                 ? 'bg-[#252838] text-white shadow-sm border border-[#3b3f57]'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            {tab.name}
+            <span className="hidden sm:inline">{tab.name}</span>
+            <span className="sm:hidden">{tab.shortName}</span>
           </button>
         ))}
       </div>
 
       {/* Grid Danh Sách Phụ Kiện */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
         {filtered.map((acc) => {
           const isSelected = selectedAccessories.includes(acc.id);
           return (
             <button
               key={acc.id}
               onClick={() => onToggleAccessory(acc.id)}
-              className={`flex items-start gap-3 p-3 rounded-2xl border text-left transition-all relative overflow-hidden group ${
+              className={`min-h-[56px] flex items-start gap-3 p-3 rounded-2xl border text-left transition-all relative overflow-hidden group ${
                 isSelected
                   ? 'bg-gradient-to-r from-[#2a2333] to-[#1e1d2a] border-[#ffd166] shadow-md shadow-[#ffd166]/10'
                   : 'bg-[#151620] border-[#292b3a] text-gray-400 hover:text-white hover:bg-[#1a1c26]'

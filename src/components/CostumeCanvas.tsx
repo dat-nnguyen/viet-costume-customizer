@@ -147,13 +147,13 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
     .filter(Boolean);
 
   return (
-    <div className="double-bezel-outer p-2 rounded-[2rem] shadow-2xl transition-all">
+    <div id="costume-canvas-container" className="double-bezel-outer p-1.5 sm:p-2 rounded-2xl sm:rounded-[2rem] shadow-2xl transition-all">
       <div 
         ref={containerRef}
-        className="double-bezel-inner rounded-[calc(2rem-0.5rem)] p-5 relative overflow-hidden flex flex-col items-center justify-between min-h-[640px]"
+        className="double-bezel-inner rounded-[1.25rem] sm:rounded-[calc(2rem-0.5rem)] p-3 sm:p-5 relative overflow-hidden flex flex-col items-center justify-between min-h-[480px] sm:min-h-[640px]"
       >
         {/* Ambient Warm Backlight */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-gradient-to-b from-[#c94b4b]/15 via-[#e09f3e]/8 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-gradient-to-b from-[#c94b4b]/15 via-[#e09f3e]/8 to-transparent blur-3xl pointer-events-none" />
 
         {/* Hidden Direct File Input */}
         <input
@@ -165,23 +165,23 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
         />
 
         {/* Top Floating Controls */}
-        <div className="w-full flex items-center justify-between gap-2 z-20">
+        <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2 z-20">
           
           {/* Badge Trang Phục */}
-          <div className="flex items-center gap-2">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#1a1c27] border border-[#2d3145] text-white flex items-center gap-2 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-[#e09f3e] animate-pulse" />
-              <span>{costume.name}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-[#1a1c27] border border-[#2d3145] text-white flex items-center gap-1.5 sm:gap-2 shadow-sm max-w-[145px] sm:max-w-none truncate">
+              <span className="w-2 h-2 rounded-full bg-[#e09f3e] animate-pulse flex-shrink-0" />
+              <span className="truncate">{costume.name}</span>
             </span>
-            <span className="hidden sm:inline-block px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#14151f] text-gray-400 border border-[#262838]">
+            <span className="hidden md:inline-block px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#14151f] text-gray-400 border border-[#262838]">
               {costume.dynasty}
             </span>
           </div>
 
           {/* Top Controls Right: Zoom & View Toggle */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {viewMode === 'editorial' && (
-              <div className="hidden sm:flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-xs items-center gap-1">
+              <div className="hidden md:flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-xs items-center gap-1">
                 <button
                   onClick={() => setZoomMode('full')}
                   className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
@@ -223,25 +223,27 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
             <div className="flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-xs">
               <button
                 onClick={() => setViewMode('editorial')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all ${
                   viewMode === 'editorial'
                     ? 'bg-[#c94b4b] text-white shadow-sm'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <ImageIcon className="w-3.5 h-3.5" />
-                <span>Người Mẫu Thật</span>
+                <span className="hidden sm:inline">Người Mẫu Thật</span>
+                <span className="sm:hidden text-[11px]">Mẫu Thật</span>
               </button>
               <button
                 onClick={() => setViewMode('schema')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all ${
                   viewMode === 'schema'
                     ? 'bg-[#c94b4b] text-white shadow-sm'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Sơ Đồ Cấu Trúc</span>
+                <span className="hidden sm:inline">Sơ Đồ Cấu Trúc</span>
+                <span className="sm:hidden text-[11px]">Sơ Đồ</span>
               </button>
             </div>
           </div>
@@ -526,34 +528,36 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => directUploadRef.current?.click()}
-              className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-[#d49b27] via-[#e09f3e] to-[#c94b4b] text-[#090a0f] flex items-center justify-center gap-2 shadow-lg shadow-[#e09f3e]/25 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+              className="flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-[#d49b27] via-[#e09f3e] to-[#c94b4b] text-[#090a0f] flex items-center justify-center gap-2 shadow-lg shadow-[#e09f3e]/25 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
             >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Tải Ảnh Của Bạn & AI Generate</span>
+              <Upload className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Tải Ảnh Của Bạn & AI Generate</span>
+              <span className="sm:hidden">Tải Ảnh & AI Render</span>
             </button>
 
             <button
               onClick={() => handleGenerateAILook()}
               disabled={isGeneratingAI}
-              className="py-2.5 px-4 rounded-xl text-xs font-bold bg-[#1e202f] hover:bg-[#282a3e] text-[#ffd166] border border-[#e09f3e]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
+              className="min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl text-xs font-bold bg-[#1e202f] hover:bg-[#282a3e] text-[#ffd166] border border-[#e09f3e]/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98 flex-shrink-0"
               title="Tổng hợp lại bức ảnh AI với cấu hình trang phục và phụ kiện hiện tại"
             >
               {isGeneratingAI ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="hidden sm:inline">Đang Tạo...</span>
                 </>
               ) : (
                 <>
-                  <Wand2 className="w-3.5 h-3.5 text-[#e09f3e]" />
-                  <span>AI Render Lại</span>
+                  <Wand2 className="w-4 h-4 text-[#e09f3e]" />
+                  <span className="hidden sm:inline">AI Render Lại</span>
+                  <span className="sm:hidden">AI Render</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Hàng 2: Các nút chức năng phụ trợ */}
-          <div className="flex items-center justify-between gap-2">
+          {/* Hàng 2 (Desktop: sm+): 5 nút dàn hàng ngang */}
+          <div className="hidden sm:flex items-center justify-between gap-2">
             {/* Nút Phối Ngẫu Hứng */}
             <button
               onClick={onRandomize}
@@ -561,7 +565,7 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
               title="Tự động phối ngẫu hứng một bộ trang phục mới"
             >
               <Shuffle className="w-3.5 h-3.5 text-[#e09f3e]" />
-              <span className="hidden sm:inline">Ngẫu Hứng</span>
+              <span>Ngẫu Hứng</span>
             </button>
 
             {/* Nút Ghép Mặt Chi Tiết */}
@@ -584,7 +588,7 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
               title="So sánh song song: Nguyên Bản vs. Remix Gen Z"
             >
               <Columns className="w-3.5 h-3.5 text-[#52b788]" />
-              <span className="hidden sm:inline">So Sánh</span>
+              <span>So Sánh</span>
             </button>
 
             {/* Nút Xuất Thẻ Lookbook */}
@@ -604,6 +608,59 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
             >
               <Download className="w-4 h-4" />
             </button>
+          </div>
+
+          {/* Hàng 2 (Mobile only: <sm): 2 hàng phụ trợ gọn gàng, phím bấm to dễ bấm */}
+          <div className="sm:hidden flex flex-col gap-2">
+            {/* Hàng 2a: Ngẫu Hứng - Người Mẫu / Ghép Mặt - So Sánh */}
+            <div className="grid grid-cols-3 gap-1.5">
+              <button
+                onClick={onRandomize}
+                className="min-h-[40px] flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold bg-[#1a1c26] active:bg-[#252838] text-white border border-[#313448]"
+              >
+                <Shuffle className="w-3.5 h-3.5 text-[#e09f3e]" />
+                <span className="text-[11px]">Ngẫu Hứng</span>
+              </button>
+
+              <button
+                onClick={onOpenFaceFitter}
+                className={`min-h-[40px] flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold border ${
+                  outfit.customFace
+                    ? 'bg-[#2d6a4f]/25 border-[#2d6a4f] text-[#52b788]'
+                    : 'bg-[#1a1c26] border-[#313448] text-white'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5 text-[#e09f3e]" />
+                <span className="text-[11px]">{outfit.customFace ? 'Sửa Mặt' : 'Ghép Mặt'}</span>
+              </button>
+
+              <button
+                onClick={onOpenCompare}
+                className="min-h-[40px] flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold bg-[#1a1c26] active:bg-[#252838] text-white border border-[#313448]"
+              >
+                <Columns className="w-3.5 h-3.5 text-[#52b788]" />
+                <span className="text-[11px]">So Sánh</span>
+              </button>
+            </div>
+
+            {/* Hàng 2b: Xuất Thẻ Lookbook + Tải Ảnh */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onOpenLookbook}
+                className="flex-1 min-h-[44px] flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold bg-[#9e2a2b] active:bg-[#b03536] text-white shadow-md shadow-[#9e2a2b]/30"
+              >
+                <Sparkles className="w-4 h-4 fill-current text-[#ffd166]" />
+                <span>Xuất Thẻ Lookbook Đẹp</span>
+              </button>
+
+              <button
+                onClick={handleDownloadImage}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-[#1a1c26] text-gray-300 active:text-white border border-[#313448]"
+                title="Tải ảnh nét cao về máy"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
         </div>

@@ -19,12 +19,36 @@ import { LookbookModal } from './components/LookbookModal';
 import { CompareModal } from './components/CompareModal';
 import { SavedLookbooks } from './components/SavedLookbooks';
 
-import { Shirt, Palette, Sparkles } from 'lucide-react';
+import { Shirt, Palette, Sparkles, Eye } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation
   const [activeTab, setActiveTab] = useState<'studio' | 'explorer' | 'saved'>('studio');
   const [studioSubTab, setStudioSubTab] = useState<'wardrobe' | 'colors' | 'accessories'>('wardrobe');
+
+  // Mobile scroll-to-canvas pill
+  const [showScrollToCanvas, setShowScrollToCanvas] = useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowScrollToCanvas(true);
+      } else {
+        setShowScrollToCanvas(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToCanvas = () => {
+    const el = document.getElementById('costume-canvas-container');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Modals state
   const [isAIStylistOpen, setIsAIStylistOpen] = useState(false);
@@ -165,11 +189,11 @@ export const App: React.FC = () => {
       />
 
       {/* Main App Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 pb-28 md:pb-8">
         
         {/* TAB 1: PHÒNG THỬ ĐỒ (STUDIO) */}
         {activeTab === 'studio' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             
             {/* Cột Trái (lg:col-span-5): Canvas Thử Đồ Vector Tương Tác & Ghép Mặt */}
             <div className="lg:col-span-5 lg:sticky lg:top-24">
@@ -188,49 +212,52 @@ export const App: React.FC = () => {
             </div>
 
             {/* Cột Phải (lg:col-span-7): Bộ Điều Khiển Phối Đồ & Cultural Guardian */}
-            <div className="lg:col-span-7 space-y-6">
+            <div className="lg:col-span-7 space-y-5 sm:space-y-6">
               
               {/* Studio Sub-Navigation Tabs */}
               <div className="flex bg-[#161722] p-1.5 rounded-2xl border border-[#2b2e40] shadow-sm">
                 <button
                   onClick={() => setStudioSubTab('wardrobe')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 min-h-[44px] py-2.5 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                     studioSubTab === 'wardrobe'
                       ? 'bg-gradient-to-r from-[#9e2a2b] to-[#c94b4b] text-white shadow-md shadow-[#9e2a2b]/20'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Shirt className="w-3.5 h-3.5" />
-                  <span>Dòng Cổ Phục & Dịp</span>
+                  <Shirt className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Dòng Cổ Phục & Dịp</span>
+                  <span className="sm:hidden">Cổ Phục</span>
                 </button>
 
                 <button
                   onClick={() => setStudioSubTab('colors')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 min-h-[44px] py-2.5 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                     studioSubTab === 'colors'
                       ? 'bg-gradient-to-r from-[#9e2a2b] to-[#c94b4b] text-white shadow-md shadow-[#9e2a2b]/20'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Palette className="w-3.5 h-3.5" />
-                  <span>Cổ Sắc & Ngũ Hành</span>
+                  <Palette className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Cổ Sắc & Ngũ Hành</span>
+                  <span className="sm:hidden">Cổ Sắc</span>
                 </button>
 
                 <button
                   onClick={() => setStudioSubTab('accessories')}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 min-h-[44px] py-2.5 px-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 ${
                     studioSubTab === 'accessories'
                       ? 'bg-gradient-to-r from-[#9e2a2b] to-[#c94b4b] text-white shadow-md shadow-[#9e2a2b]/20'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Phụ Kiện Remix</span>
+                  <Sparkles className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Phụ Kiện Remix</span>
+                  <span className="sm:hidden">Phụ Kiện</span>
                 </button>
               </div>
 
               {/* Sub Tab Contents */}
-              <div className="bg-[#161722] border border-[#2b2e40] rounded-3xl p-6 shadow-xl">
+              <div className="bg-[#161722] border border-[#2b2e40] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl">
                 {studioSubTab === 'wardrobe' && (
                   <WardrobePanel
                     outfit={outfit}
@@ -360,6 +387,18 @@ export const App: React.FC = () => {
           currentScore={currentScore}
           onClose={() => setIsCompareOpen(false)}
         />
+      )}
+
+      {/* Floating "Xem Mẫu" Pill on Mobile when scrolled down in Studio */}
+      {showScrollToCanvas && activeTab === 'studio' && (
+        <button
+          onClick={handleScrollToCanvas}
+          className="md:hidden fixed bottom-20 right-4 z-40 flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#181926]/95 text-white border border-[#e09f3e] shadow-2xl shadow-black/80 backdrop-blur-md active:scale-95 transition-all cursor-pointer animate-fadeIn"
+          title="Cuộn nhanh lên xem người mẫu đang mặc thử"
+        >
+          <Eye className="w-4 h-4 text-[#ffd166]" />
+          <span className="text-xs font-bold text-white">Xem Mẫu</span>
+        </button>
       )}
 
     </div>

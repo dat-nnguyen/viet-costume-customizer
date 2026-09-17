@@ -38,42 +38,43 @@ export const ColorPalettePicker: React.FC<ColorPalettePickerProps> = ({
       </div>
 
       {/* Switcher: Áo Ngoài - Áo Trong - Quần/Váy */}
-      <div className="flex bg-[#161722] p-1 rounded-xl border border-[#292b3a]">
+      <div className="flex bg-[#161824] p-1 rounded-xl border border-[#292b3a]">
         {[
-          { id: 'outer', name: 'Áo Ngoài', color: outerColor },
-          { id: 'inner', name: 'Áo Trong / Cổ Lót', color: innerColor },
-          { id: 'bottom', name: 'Quần / Váy', color: bottomColor }
+          { id: 'outer', name: 'Áo Ngoài', shortName: 'Áo Ngoài', color: outerColor },
+          { id: 'inner', name: 'Áo Trong / Cổ Lót', shortName: 'Cổ Lót', color: innerColor },
+          { id: 'bottom', name: 'Quần / Váy', shortName: 'Hạ Y', color: bottomColor }
         ].map((layer) => {
           const isActive = activeLayer === layer.id;
           return (
             <button
               key={layer.id}
               onClick={() => setActiveLayer(layer.id as any)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 min-h-[40px] flex items-center justify-center gap-1.5 sm:gap-2 py-2 px-1 rounded-lg text-xs font-semibold transition-all ${
                 isActive
                   ? 'bg-[#252838] text-white shadow-md border border-[#3b3f57]'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
               <span
-                className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
+                className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm flex-shrink-0"
                 style={{ backgroundColor: layer.color.hex }}
               />
-              <span>{layer.name}</span>
+              <span className="hidden sm:inline truncate">{layer.name}</span>
+              <span className="sm:hidden text-[11px] truncate">{layer.shortName}</span>
             </button>
           );
         })}
       </div>
 
       {/* Grid 12 Màu Cổ Sắc */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5">
         {HERITAGE_COLORS.map((c) => {
           const isSelected = currentColor.id === c.id;
           return (
             <button
               key={c.id}
               onClick={() => onColorSelect(activeLayer, c)}
-              className={`flex items-center gap-2.5 p-2 rounded-xl border text-left transition-all ${
+              className={`min-h-[48px] flex items-center gap-2 sm:gap-2.5 p-2 rounded-xl border text-left transition-all ${
                 isSelected
                   ? 'bg-[#252838] border-[#e09f3e] shadow-md shadow-[#e09f3e]/15 scale-[1.02]'
                   : 'bg-[#151620] border-[#292b3a] text-gray-300 hover:bg-[#1c1e2b] hover:border-[#383b4e]'

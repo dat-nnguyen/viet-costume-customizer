@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1.5 bg-[#171821] p-1 rounded-xl border border-[#2b2d3d]">
+          {/* Navigation Tabs (Desktop only: md+) */}
+          <nav className="hidden md:flex items-center gap-1.5 bg-[#171821] p-1 rounded-xl border border-[#2b2d3d]">
             <button
               onClick={() => setActiveTab('studio')}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Shirt className="w-4 h-4" />
-              <span className="hidden sm:inline">Phòng Thử Đồ</span>
+              <span>Phòng Thử Đồ</span>
             </button>
 
             <button
@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Bách Khoa Cổ Phục</span>
+              <span>Bách Khoa Cổ Phục</span>
             </button>
 
             <button
@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Bookmark className="w-4 h-4" />
-              <span className="hidden sm:inline">Bộ Sưu Tập</span>
+              <span>Bộ Sưu Tập</span>
               {savedCount > 0 && (
                 <span className="bg-[#e09f3e] text-[#121214] font-bold text-[11px] w-4 h-4 rounded-full flex items-center justify-center">
                   {savedCount}
@@ -107,11 +107,11 @@ export const Header: React.FC<HeaderProps> = ({
           </nav>
 
           {/* Action Buttons: Ghép Mặt & AI Stylist & API Key */}
-          <div className="flex items-center gap-2">
-            {/* Ghép Mặt Chân Dung Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Ghép Mặt Chân Dung Button (Desktop) */}
             <button
               onClick={onOpenFaceFitter}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                 hasCustomFace
                   ? 'bg-[#2d6a4f]/20 border-[#2d6a4f] text-[#52b788] shadow-sm shadow-[#2d6a4f]/40'
                   : 'bg-[#1a1b24] border-[#313445] text-[#d1d5db] hover:bg-[#242635] hover:border-[#e09f3e]/40 hover:text-white'
@@ -119,7 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="Ghép khuôn mặt của bạn vào búp bê thời trang"
             >
               <Camera className="w-3.5 h-3.5 text-[#e09f3e]" />
-              <span className="hidden md:inline">
+              <span>
                 {hasCustomFace ? 'Đã Ghép Mặt' : 'Ghép Mặt Của Bạn'}
               </span>
             </button>
@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* AI Stylist Button */}
             <button
               onClick={onOpenAIStylist}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#d49b27] via-[#e09f3e] to-[#c94b4b] text-[#121214] shadow-md shadow-[#e09f3e]/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#d49b27] via-[#e09f3e] to-[#c94b4b] text-[#121214] shadow-md shadow-[#e09f3e]/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5 fill-current" />
               <span>AI Stylist</span>
@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Gemini API Key Setting */}
             <button
               onClick={() => setShowKeyModal(true)}
-              className="p-2 rounded-xl bg-[#171821] border border-[#2b2d3d] text-[#9ca3af] hover:text-white hover:border-[#42465d] transition-all"
+              className="p-1.5 sm:p-2 rounded-xl bg-[#171821] border border-[#2b2d3d] text-[#9ca3af] hover:text-white hover:border-[#42465d] transition-all"
               title="Cấu hình Gemini API Key (Tùy chọn)"
             >
               <Key className="w-4 h-4" />
@@ -145,6 +145,86 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </header>
+
+      {/* Fixed Ergonomic Bottom Navigation Bar for Mobile (<md) */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0c0d14]/95 backdrop-blur-xl border-t border-[#232536] px-2 py-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl flex items-center justify-around">
+        {/* Tab 1: Studio */}
+        <button
+          onClick={() => setActiveTab('studio')}
+          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
+            activeTab === 'studio'
+              ? 'text-[#e09f3e] font-bold'
+              : 'text-[#8c91a4] hover:text-white font-medium'
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${activeTab === 'studio' ? 'bg-[#e09f3e]/15' : ''}`}>
+            <Shirt className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] leading-tight">Thử Đồ</span>
+        </button>
+
+        {/* Tab 2: Bách Khoa */}
+        <button
+          onClick={() => setActiveTab('explorer')}
+          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl transition-all ${
+            activeTab === 'explorer'
+              ? 'text-[#e09f3e] font-bold'
+              : 'text-[#8c91a4] hover:text-white font-medium'
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${activeTab === 'explorer' ? 'bg-[#e09f3e]/15' : ''}`}>
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] leading-tight">Bách Khoa</span>
+        </button>
+
+        {/* Tab 3: Ghép Mặt Quick Trigger */}
+        <button
+          onClick={onOpenFaceFitter}
+          className="flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl text-[#8c91a4] hover:text-white transition-all relative"
+        >
+          <div className={`p-1 rounded-lg ${hasCustomFace ? 'bg-[#2d6a4f]/25 text-[#52b788]' : ''}`}>
+            <Camera className="w-5 h-5 text-[#e09f3e]" />
+          </div>
+          <span className="text-[10px] leading-tight">
+            {hasCustomFace ? 'Mặt Của Bạn' : 'Ghép Mặt'}
+          </span>
+          {hasCustomFace && (
+            <span className="absolute top-1.5 right-3 w-2 h-2 rounded-full bg-[#52b788] animate-pulse" />
+          )}
+        </button>
+
+        {/* Tab 4: AI Stylist Quick Trigger */}
+        <button
+          onClick={onOpenAIStylist}
+          className="flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl text-[#ffd166] transition-all"
+        >
+          <div className="p-1 rounded-lg bg-gradient-to-tr from-[#9e2a2b]/40 to-[#e09f3e]/30 border border-[#e09f3e]/40 shadow-sm">
+            <Sparkles className="w-5 h-5 text-[#ffd166]" />
+          </div>
+          <span className="text-[10px] font-bold leading-tight text-[#ffd166]">AI Stylist</span>
+        </button>
+
+        {/* Tab 5: Bộ Sưu Tập */}
+        <button
+          onClick={() => setActiveTab('saved')}
+          className={`flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl transition-all relative ${
+            activeTab === 'saved'
+              ? 'text-[#e09f3e] font-bold'
+              : 'text-[#8c91a4] hover:text-white font-medium'
+          }`}
+        >
+          <div className={`p-1 rounded-lg ${activeTab === 'saved' ? 'bg-[#e09f3e]/15' : ''}`}>
+            <Bookmark className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] leading-tight">Đã Lưu</span>
+          {savedCount > 0 && (
+            <span className="absolute top-0.5 right-2 bg-[#e09f3e] text-[#121214] font-extrabold text-[9px] w-4 h-4 rounded-full flex items-center justify-center">
+              {savedCount}
+            </span>
+          )}
+        </button>
+      </nav>
 
       {/* Modal Cài Đặt Gemini API Key */}
       {showKeyModal && (

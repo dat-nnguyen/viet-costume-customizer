@@ -62,17 +62,17 @@ export const AIStylistModal: React.FC<AIStylistModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#171822] border border-[#2d3042] rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#171822] border border-[#2d3042] rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-2xl w-full shadow-2xl space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#282a3a]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#d49b27] to-[#e09f3e] flex items-center justify-center text-[#121214] shadow-md shadow-[#d49b27]/30">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#d49b27] to-[#e09f3e] flex items-center justify-center text-[#121214] shadow-md shadow-[#d49b27]/30 flex-shrink-0">
               <Sparkles className="w-5 h-5 fill-current" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white font-serif">Trợ Lý AI Stylist Cổ Phục</h3>
+              <h3 className="text-base sm:text-lg font-bold text-white font-serif">Trợ Lý AI Stylist Cổ Phục</h3>
               <p className="text-xs text-gray-400">
                 Tối ưu hóa bản phối trang phục theo sự kiện, địa phương và phong cách Gen Z
               </p>

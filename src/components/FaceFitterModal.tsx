@@ -146,35 +146,35 @@ export const FaceFitterModal: React.FC<FaceFitterModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#14151f] border border-[#2c2f42] rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#14151f] border border-[#2c2f42] rounded-2xl sm:rounded-3xl p-4 sm:p-7 max-w-2xl w-full shadow-2xl space-y-4 sm:space-y-6 max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#252838]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#2d6a4f] to-[#52b788] flex items-center justify-center text-white shadow-md shadow-[#2d6a4f]/30">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-[#2d6a4f] to-[#52b788] flex items-center justify-center text-white shadow-md shadow-[#2d6a4f]/30 flex-shrink-0">
               <Camera className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight">Ghép Mặt & Tạo Ảnh AI Cổ Phục</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">Ghép Mặt & Tạo Ảnh AI Cổ Phục</h3>
+              <p className="text-[11px] sm:text-xs text-gray-400">
                 Tải ảnh selfie của bạn để AI tự động render ảnh bạn mặc cổ phục này
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-lg p-1.5 rounded-xl hover:bg-[#202230] transition-colors cursor-pointer"
+            className="text-gray-400 hover:text-white text-base sm:text-lg p-1.5 rounded-xl hover:bg-[#202230] transition-colors cursor-pointer"
           >
             ✕
           </button>
         </div>
 
         {/* Main Grid: Left Preview & Right Sliders */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 items-center">
           
           {/* Left Column: Live Frame Preview OR Generated AI Photo */}
-          <div className="flex flex-col items-center justify-center bg-[#0c0d14] border border-[#232536] rounded-2xl p-5 relative overflow-hidden">
+          <div className="flex flex-col items-center justify-center bg-[#0c0d14] border border-[#232536] rounded-2xl p-3 sm:p-5 relative overflow-hidden">
             
             {/* Switch Tabs between Calibration and AI Result */}
             <div className="flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-[11px] font-semibold mb-3 w-full">
@@ -202,9 +202,9 @@ export const FaceFitterModal: React.FC<FaceFitterModalProps> = ({
             </div>
 
             {previewTab === 'calibrate' ? (
-              <div className="relative w-56 h-72 rounded-2xl bg-[#08080c] border border-[#2f3246] flex items-center justify-center overflow-hidden shadow-inner">
+              <div className="relative w-48 sm:w-56 h-64 sm:h-72 rounded-2xl bg-[#08080c] border border-[#2f3246] flex items-center justify-center overflow-hidden shadow-inner">
                 {/* Mask Oval Preview */}
-                <div className="relative w-36 h-48 rounded-full border-2 border-dashed border-[#e09f3e] overflow-hidden shadow-2xl">
+                <div className="relative w-32 sm:w-36 h-44 sm:h-48 rounded-full border-2 border-dashed border-[#e09f3e] overflow-hidden shadow-2xl">
                   <img
                     src={imageUrl}
                     alt="Face preview"
@@ -233,7 +233,7 @@ export const FaceFitterModal: React.FC<FaceFitterModalProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="relative w-56 h-72 rounded-2xl bg-[#08080c] border border-[#2f3246] flex items-center justify-center overflow-hidden shadow-inner">
+              <div className="relative w-48 sm:w-56 h-64 sm:h-72 rounded-2xl bg-[#08080c] border border-[#2f3246] flex items-center justify-center overflow-hidden shadow-inner">
                 {generatedPreview ? (
                   <img
                     src={generatedPreview}

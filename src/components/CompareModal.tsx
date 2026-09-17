@@ -16,20 +16,20 @@ export const CompareModal: React.FC<CompareModalProps> = ({
   onClose
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn text-left">
-      <div className="bg-[#14151f] border border-[#2c2f44] rounded-3xl p-6 sm:p-8 max-w-4xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn text-left">
+      <div className="bg-[#14151f] border border-[#2c2f44] rounded-2xl sm:rounded-3xl p-4 sm:p-8 max-w-4xl w-full shadow-2xl space-y-5 sm:space-y-6 max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#232536]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#2d6a4f]/20 border border-[#2d6a4f]/40 flex items-center justify-center text-[#52b788]">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#2d6a4f]/20 border border-[#2d6a4f]/40 flex items-center justify-center text-[#52b788] flex-shrink-0">
               <Columns className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
                 Đối Chiếu: Cổ Điển Nguyên Bản vs. Remix Gen Z
               </h3>
-              <p className="text-xs text-gray-400">
+              <p className="text-[11px] sm:text-xs text-gray-400">
                 So sánh song song để thấy rõ giá trị bảo tồn và nét sáng tạo đương đại
               </p>
             </div>

@@ -74,14 +74,14 @@ Khám phá và thử đồ Việt phục phong cách Gen Z tại Việt Phục R
   const activeAccessories = ACCESSORIES_DATA.filter(a => outfit.selectedAccessories.includes(a.id));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn text-left">
-      <div className="bg-[#141520] border border-[#2d3044] rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn text-left">
+      <div className="bg-[#141520] border border-[#2d3044] rounded-2xl sm:rounded-3xl p-4 sm:p-7 max-w-xl w-full shadow-2xl space-y-4 sm:space-y-5 max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-[#232536]">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[#ffd166]" />
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-sm sm:text-base font-bold text-white">
               Thẻ Lookbook Thời Trang Di Sản
             </h3>
           </div>
