@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { OutfitState, CostumeId, HeritageColor, CustomFaceConfig, AIStylistRecommendation } from './types';
+import { OutfitState, CostumeId, HeritageColor, CustomFaceConfig, AIStylistRecommendation, ChatActionPayload } from './types';
 import { TRADITIONAL_COSTUMES } from './data/traditionalCostumes';
 import { HERITAGE_COLORS } from './data/heritagePalettes';
 import { evaluateOutfitCulture } from './data/culturalRules';
@@ -18,13 +18,17 @@ import { CostumeExplorer } from './components/CostumeExplorer';
 import { LookbookModal } from './components/LookbookModal';
 import { CompareModal } from './components/CompareModal';
 import { SavedLookbooks } from './components/SavedLookbooks';
+import { AIChatAdvisor } from './components/AIChatAdvisor';
 
-import { Shirt, Palette, Sparkles, Eye } from 'lucide-react';
+import { Shirt, Palette, Sparkles, Eye, Bot } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation
   const [activeTab, setActiveTab] = useState<'studio' | 'explorer' | 'saved'>('studio');
   const [studioSubTab, setStudioSubTab] = useState<'wardrobe' | 'colors' | 'accessories'>('wardrobe');
+
+  // Chatbot Cố Vấn Di Sản
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Mobile scroll-to-canvas pill
   const [showScrollToCanvas, setShowScrollToCanvas] = useState(false);
@@ -50,21 +54,41 @@ export const App: React.FC = () => {
     }
   };
 
+  // Áp dụng trang phục trực tiếp từ Chatbot lên Canvas
+  const handleApplyOutfitFromChat = (payload: ChatActionPayload) => {
+    setOutfit(prev => {
+      const costumeId = payload.costumeId || prev.costumeId;
+      const outerColor = payload.outerColorId
+        ? HERITAGE_COLORS.find(c => c.id === payload.outerColorId) || prev.outerColor
+        : prev.outerColor;
+      const innerColor = payload.innerColorId
+        ? HERITAGE_COLORS.find(c => c.id === payload.innerColorId) || prev.innerColor
+        : prev.innerColor;
+      const bottomColor = payload.bottomColorId
+        ? HERITAGE_COLORS.find(c => c.id === payload.bottomColorId) || prev.bottomColor
+        : prev.bottomColor;
+      const selectedAccessories = payload.accessories || prev.selectedAccessories;
+
+      return {
+        ...prev,
+        costumeId,
+        outerColor,
+        innerColor,
+        bottomColor,
+        selectedAccessories
+      };
+    });
+    setActiveTab('studio');
+    setTimeout(() => {
+      document.getElementById('costume-canvas-container')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
   // Modals state
   const [isAIStylistOpen, setIsAIStylistOpen] = useState(false);
   const [isFaceFitterOpen, setIsFaceFitterOpen] = useState(false);
   const [isLookbookOpen, setIsLookbookOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
-
-  // Gemini API Key (lưu trong localStorage để người dùng không phải nhập lại)
-  const [apiKey, setApiKey] = useState<string>(() => {
-    return localStorage.getItem('gemini_api_key_custom') || import.meta.env.VITE_GEMINI_API_KEY || '';
-  });
-
-  const handleUpdateApiKey = (key: string) => {
-    setApiKey(key);
-    localStorage.setItem('gemini_api_key_custom', key);
-  };
 
   // Saved Lookbooks
   const [savedLookbooks, setSavedLookbooks] = useState(() => getSavedLookbooks());
@@ -182,9 +206,8 @@ export const App: React.FC = () => {
         setActiveTab={setActiveTab}
         onOpenAIStylist={() => setIsAIStylistOpen(true)}
         onOpenFaceFitter={() => setIsFaceFitterOpen(true)}
+        onOpenChat={() => setIsChatOpen(true)}
         savedCount={savedLookbooks.length}
-        apiKey={apiKey}
-        setApiKey={handleUpdateApiKey}
         hasCustomFace={!!outfit.customFace}
       />
 
@@ -345,7 +368,6 @@ export const App: React.FC = () => {
         <AIStylistModal
           currentOccasionId={outfit.occasionId}
           currentStyleId={outfit.remixStyleId}
-          apiKey={apiKey}
           onApplyRecommendation={handleApplyAIRec}
           onClose={() => setIsAIStylistOpen(false)}
         />
@@ -393,13 +415,35 @@ export const App: React.FC = () => {
       {showScrollToCanvas && activeTab === 'studio' && (
         <button
           onClick={handleScrollToCanvas}
-          className="md:hidden fixed bottom-20 right-4 z-40 flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#181926]/95 text-white border border-[#e09f3e] shadow-2xl shadow-black/80 backdrop-blur-md active:scale-95 transition-all cursor-pointer animate-fadeIn"
+          className="md:hidden fixed bottom-36 right-4 z-30 flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#181926]/95 text-white border border-[#e09f3e] shadow-2xl shadow-black/80 backdrop-blur-md active:scale-95 transition-all cursor-pointer animate-fadeIn"
           title="Cuộn nhanh lên xem người mẫu đang mặc thử"
         >
-          <Eye className="w-4 h-4 text-[#ffd166]" />
+          <Eye className="w-3.5 h-3.5 text-[#ffd166]" />
           <span className="text-xs font-bold text-white">Xem Mẫu</span>
         </button>
       )}
+
+      {/* Floating Chatbot Advisor Launcher Button */}
+      {!isChatOpen && (
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#9e2a2b] via-[#c94b4b] to-[#e09f3e] text-white font-bold text-xs shadow-2xl shadow-[#9e2a2b]/50 hover:brightness-110 active:scale-95 transition-all cursor-pointer group"
+          title="Trò chuyện với Cố Vấn Cổ Phục AI"
+        >
+          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:rotate-12 transition-transform">
+            <Bot className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="tracking-wide">Hỏi Cố Vấn AI</span>
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+        </button>
+      )}
+
+      {/* Interactive AI Chatbot Advisor Drawer/Modal */}
+      <AIChatAdvisor
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        onApplyOutfit={handleApplyOutfitFromChat}
+      />
 
     </div>
   );

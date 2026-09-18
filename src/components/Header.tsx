@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { Sparkles, Camera, BookOpen, Shirt, Bookmark, Key, Check } from 'lucide-react';
+import React from 'react';
+import { Sparkles, Camera, BookOpen, Shirt, Bookmark, MessageSquare } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'studio' | 'explorer' | 'saved';
   setActiveTab: (tab: 'studio' | 'explorer' | 'saved') => void;
   onOpenAIStylist: () => void;
   onOpenFaceFitter: () => void;
+  onOpenChat: () => void;
   savedCount: number;
-  apiKey: string;
-  setApiKey: (key: string) => void;
   hasCustomFace: boolean;
 }
 
@@ -17,23 +16,10 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   onOpenAIStylist,
   onOpenFaceFitter,
+  onOpenChat,
   savedCount,
-  apiKey,
-  setApiKey,
   hasCustomFace
 }) => {
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [tempKey, setTempKey] = useState(apiKey);
-  const [keySaved, setKeySaved] = useState(false);
-
-  const handleSaveKey = () => {
-    setApiKey(tempKey);
-    setKeySaved(true);
-    setTimeout(() => {
-      setKeySaved(false);
-      setShowKeyModal(false);
-    }, 1200);
-  };
 
   return (
     <>
@@ -124,6 +110,16 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
 
+            {/* Chatbot Cố Vấn Button */}
+            <button
+              onClick={onOpenChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1a1b24] border border-[#3b3e55] text-white hover:border-[#e09f3e] hover:text-[#ffd166] transition-all cursor-pointer shadow-sm"
+              title="Mở Chatbot Cố Vấn Cổ Phục & Gen Z Remix"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#e09f3e]" />
+              <span>Cố Vấn AI</span>
+            </button>
+
             {/* AI Stylist Button */}
             <button
               onClick={onOpenAIStylist}
@@ -131,15 +127,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 fill-current" />
               <span>AI Stylist</span>
-            </button>
-
-            {/* Gemini API Key Setting */}
-            <button
-              onClick={() => setShowKeyModal(true)}
-              className="p-1.5 sm:p-2 rounded-xl bg-[#171821] border border-[#2b2d3d] text-[#9ca3af] hover:text-white hover:border-[#42465d] transition-all"
-              title="Cấu hình Gemini API Key (Tùy chọn)"
-            >
-              <Key className="w-4 h-4" />
             </button>
           </div>
 
@@ -194,15 +181,15 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
 
-        {/* Tab 4: AI Stylist Quick Trigger */}
+        {/* Tab 4: Chatbot Cố Vấn Quick Trigger */}
         <button
-          onClick={onOpenAIStylist}
+          onClick={onOpenChat}
           className="flex flex-col items-center justify-center gap-0.5 py-1 px-2.5 rounded-xl text-[#ffd166] transition-all"
         >
           <div className="p-1 rounded-lg bg-gradient-to-tr from-[#9e2a2b]/40 to-[#e09f3e]/30 border border-[#e09f3e]/40 shadow-sm">
-            <Sparkles className="w-5 h-5 text-[#ffd166]" />
+            <MessageSquare className="w-5 h-5 text-[#ffd166]" />
           </div>
-          <span className="text-[10px] font-bold leading-tight text-[#ffd166]">AI Stylist</span>
+          <span className="text-[10px] font-bold leading-tight text-[#ffd166]">Cố Vấn AI</span>
         </button>
 
         {/* Tab 5: Bộ Sưu Tập */}
@@ -225,79 +212,6 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </button>
       </nav>
-
-      {/* Modal Cài Đặt Gemini API Key */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#181922] border border-[#2f3244] rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#282a38]">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-[#e09f3e]/15 text-[#e09f3e]">
-                  <Key className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold text-white">Cấu Hình Google Gemini API Key</h3>
-              </div>
-              <button 
-                onClick={() => setShowKeyModal(false)}
-                className="text-gray-400 hover:text-white text-sm"
-              >
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-300 leading-relaxed">
-              Ứng dụng đã tích hợp sẵn <strong>Offline Cultural Expert AI</strong> hoạt động 100% mượt mà ngay cả khi không có mạng.
-              Nếu bạn muốn kết nối trực tiếp với mô hình <strong>Gemini 1.5 Flash</strong> từ Google Cloud, hãy dán API key của bạn vào đây:
-            </p>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Gemini API Key (Miễn phí từ Google AI Studio)
-              </label>
-              <input
-                type="password"
-                value={tempKey}
-                onChange={(e) => setTempKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full px-3 py-2 bg-[#101117] border border-[#373a4e] rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#e09f3e]"
-              />
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-gray-400">
-              <a 
-                href="https://aistudio.google.com/app/apikey" 
-                target="_blank" 
-                rel="noreferrer"
-                className="text-[#e09f3e] hover:underline"
-              >
-                Lấy API Key miễn phí tại đây →
-              </a>
-              {apiKey && <span className="text-green-400">● Đã kết nối API</span>}
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setShowKeyModal(false)}
-                className="flex-1 px-4 py-2 rounded-xl text-xs font-medium bg-[#212330] text-gray-300 hover:bg-[#2a2c3d]"
-              >
-                Đóng
-              </button>
-              <button
-                onClick={handleSaveKey}
-                className="flex-1 px-4 py-2 rounded-xl text-xs font-bold bg-[#c94b4b] hover:bg-[#b03b3b] text-white flex items-center justify-center gap-1.5 shadow-md shadow-[#c94b4b]/30"
-              >
-                {keySaved ? (
-                  <>
-                    <Check className="w-3.5 h-3.5" /> Đã Lưu!
-                  </>
-                ) : (
-                  'Lưu Khóa API'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

@@ -159,28 +159,38 @@ Yêu cầu output: Trả về DUY NHẤT một JSON hợp lệ (không kèm mark
 }
 `;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1200
+    const modelsToTry = ['gemini-3.7-flash', 'gemini-3.5-flash'];
+    let candidateText: string | undefined;
+
+    for (const model of modelsToTry) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 1200
+              }
+            })
           }
-        })
+        );
+
+        if (!response.ok) {
+          console.warn(`Gemini API (${model}) trả về lỗi HTTP:`, response.status);
+          continue;
+        }
+
+        const data = await response.json();
+        candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidateText) break;
+      } catch (callErr) {
+        console.warn(`Lỗi khi gọi model ${model}:`, callErr);
       }
-    );
-
-    if (!response.ok) {
-      console.warn('Gemini API trả về lỗi HTTP, chuyển sang Offline Engine:', response.status);
-      return generateLocalExpertRecommendation(req);
     }
-
-    const data = await response.json();
-    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!candidateText) {
       return generateLocalExpertRecommendation(req);

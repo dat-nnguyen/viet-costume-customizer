@@ -130,3 +130,20 @@ export interface SavedLookbook {
   score: CulturalScore;
   aiNote?: string;
 }
+
+export interface ChatActionPayload {
+  costumeId?: CostumeId;
+  outerColorId?: string;
+  innerColorId?: string;
+  bottomColorId?: string;
+  accessories?: string[];
+  name?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'assistant';
+  text: string;
+  timestamp: number;
+  actionPayload?: ChatActionPayload;
+}
