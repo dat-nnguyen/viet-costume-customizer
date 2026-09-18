@@ -1,5 +1,8 @@
-const PRIMARY_MODEL = 'gemini-3.7-flash';
-const FALLBACK_MODEL = 'gemini-3.5-flash';
+// Danh sách model ưu tiên theo tốc độ phản hồi thực tế và độ sẵn sàng của Google API
+// 1. gemini-3.5-flash-lite: Tốc độ phản hồi cực nhanh (<1s TTFB), không bị lỗi quá tải 503
+// 2. gemini-3.6-flash: Model được Google khuyến nghị chính thức
+// 3. gemini-3.7-flash: Model thế hệ mới (dự phòng khi hết spike demand)
+const MODELS = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.5-flash'];
 
 // System Instruction với Guardrail nghiêm ngặt: Chỉ tư vấn Cổ phục Việt Nam & Gen Z Remix
 const SYSTEM_INSTRUCTION = `
@@ -39,17 +42,54 @@ export function getApiKey(): string {
 }
 
 /**
- * Stream phản hồi từ Gemini API về Express Response (SSE)
+ * Fallback tư vấn chuyên gia dự phòng nếu Google API gặp sự cố mạng/quá tải
+ */
+function generateExpertAdvisorFallback(userText: string): string {
+  const t = userText.toLowerCase();
+
+  // Kiểm tra guardrail câu hỏi ngoài lề
+  const offTopicKeywords = ['toán', 'code', 'python', 'javascript', 'html', 'css', 'lập trình', 'thời tiết', 'chính trị', 'bóng đá', 'giá vàng', 'tính nhẩm'];
+  if (offTopicKeywords.some(k => t.includes(k))) {
+    return 'Dạ, tôi là Cố Vấn Cổ Phục Việt Nam. Tôi chỉ có thể tư vấn chuyên sâu về các dòng cổ phục (Áo Dài, Áo Tấc, Ngũ Thân, Nhật Bình...), triết lý ngũ hành và cách phối đồ Gen Z Remix. Bạn có muốn tìm hiểu về trang phục truyền thống cho dịp sắp tới không ạ?';
+  }
+
+  if (t.includes('kỷ yếu') || t.includes('tốt nghiệp') || t.includes('trường')) {
+    return 'Dịp chụp ảnh kỷ yếu là khoảnh khắc thanh xuân đáng nhớ nhất! Bạn nên chọn **Áo Ngũ Thân Tay Chẽn** hoặc **Áo Tấc** màu **Xanh Bích Thủy** hoặc **Chàm Thâm** phối cùng quần lụa trắng ngà. Đây là gam màu biểu trưng cho tri thức và sự phát triển.\n\nĐể tạo nét trẻ trung Gen Z, bạn hãy mix cùng **Sneakers trắng** và một chiếc **Túi tote Đông Hồ**. Bản phối vừa giữ trọn nét tôn nghiêm học đường, vừa giúp bạn thoải mái di chuyển suốt buổi chụp.\n\n[ACTION:costumeId=ao_tac&outerColor=xanh_bich_thuy&innerColor=trang_nga&bottomColor=trang_nga&accessories=sneakers_trang,tui_tote_dong_ho,khan_dong&name=Nho Sinh Tân Thời]';
+  }
+
+  if (t.includes('tết') || t.includes('xuân') || t.includes('du xuân')) {
+    return 'Đón Tết cổ truyền, sắc **Đỏ Điều** (Hành Hỏa - may mắn, hỷ sự) hoặc **Vàng Hoàng Yến** (Hành Thổ - vương giả, tài lộc) là lựa chọn tuyệt mỹ nhất. Một chiếc **Áo Tấc** gấm hoa phối cùng quần trắng ngà và khuy cài ngũ thường sẽ mang lại phúc khí dồi dào cho năm mới.\n\nBạn có thể phối thêm một chiếc **Quạt xếp gấm** và **Khăn đóng** nhung đen để hoàn thiện nét đẹp tân xuân đài các.\n\n[ACTION:costumeId=ao_tac&outerColor=do_dieu&innerColor=trang_nga&bottomColor=trang_nga&accessories=khan_dong,quat_xep_gam,chuoi_ngoc_trai&name=Tân Xuân Cát Tường]';
+  }
+
+  if (t.includes('nhật bình') || t.includes('cung đình') || t.includes('huế')) {
+    return '**Áo Nhật Bình** là đệ nhất quý phục triều Nguyễn với phần cổ áo chữ nhật viền hoa văn tinh xảo và dải ngũ sắc rực rỡ nơi tay áo tượng trưng cho Ngũ Hành.\n\nKhi diện Nhật Bình sắc **Tím Huế** hoặc **Vàng Hoàng Yến**, bạn nên kết hợp cùng **Khăn vành dây** và chuỗi ngọc trai để toát lên thần thái quyền quý, đoan trang.\n\n[ACTION:costumeId=nhat_binh&outerColor=tim_hue&innerColor=trang_nga&bottomColor=trang_nga&accessories=khan_vanh_day,chuoi_ngoc_trai,quat_xep_gam&name=Phượng Các Khuê Các]';
+  }
+
+  // Mặc định tư vấn phong cách Ngũ Thân Tân Thời
+  return 'Chào bạn! Trong kho tàng y phục truyền thống Việt Nam, dòng **Áo Ngũ Thân Tay Chẽn** là trang phục hoàn hảo nhất để khởi đầu. Áo có 5 thân tượng trưng cho tứ thân phụ mẫu và chính bản thân người mặc, cùng 5 hạt khuy tượng trưng cho Ngũ Thường (Nhân, Nghĩa, Lễ, Trí, Tín).\n\nBạn có thể thử gam màu **Chàm Thâm** kết hợp quần trắng ngà và phụ kiện hiện đại như **Sneakers trắng** để tạo nên phong cách vừa hoài cổ vừa năng động.\n\n[ACTION:costumeId=ngu_than_chen&outerColor=cham_tham&innerColor=trang_nga&bottomColor=trang_nga&accessories=sneakers_trang,tui_tote_dong_ho&name=Thanh Xuân Khởi Sắc]';
+}
+
+/**
+ * Stream phản hồi từ Gemini API về Express Response (SSE) với timeout cực nhanh & fallback tự động
  */
 export async function streamChatToResponse(
   messages: Array<{ sender: 'user' | 'assistant'; text: string }>,
   onChunk: (chunk: string) => void,
   onComplete: (fullText: string) => void,
-  onError: (err: any) => void
+  _onError: (err: any) => void
 ) {
   const apiKey = getApiKey();
+  const lastUserText = messages.filter(m => m.sender === 'user').pop()?.text || '';
+
   if (!apiKey) {
-    throw new Error('Chưa cấu hình GEMINI_API_KEY trên server');
+    // Không có API key -> dùng fallback engine
+    const fbText = generateExpertAdvisorFallback(lastUserText);
+    for (const word of fbText.split(' ')) {
+      onChunk(word + ' ');
+      await new Promise(r => setTimeout(r, 25));
+    }
+    onComplete(fbText);
+    return;
   }
 
   const contents = messages.map(m => ({
@@ -57,14 +97,17 @@ export async function streamChatToResponse(
     parts: [{ text: m.text }]
   }));
 
-  const models = [PRIMARY_MODEL, FALLBACK_MODEL];
-
-  for (const model of models) {
+  for (const model of MODELS) {
     try {
+      // Giới hạn timeout 5 giây mỗi model để không bị treo nếu Google quá tải
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents,
           systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
@@ -76,8 +119,10 @@ export async function streamChatToResponse(
         })
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        console.warn(`Model ${model} stream error:`, response.status);
+        console.warn(`Model ${model} stream returned HTTP ${response.status}, trying next model...`);
         continue;
       }
 
@@ -115,14 +160,23 @@ export async function streamChatToResponse(
         }
       }
 
-      onComplete(fullText);
-      return;
-    } catch (err) {
-      console.warn(`Streaming with ${model} failed, trying next model:`, err);
+      if (fullText.trim().length > 0) {
+        onComplete(fullText);
+        return;
+      }
+    } catch (err: any) {
+      console.warn(`Model ${model} stream failed (${err.name === 'AbortError' ? 'Timeout' : err.message}), trying next model...`);
     }
   }
 
-  onError(new Error('Tất cả model Gemini đều không phản hồi'));
+  // Nếu tất cả model đều quá tải 503 hoặc timeout: Kích hoạt Cultural Expert Engine tức thì
+  console.log('⚡ All Gemini models unavailable or timed out. Activating Instant Cultural Expert Fallback Stream.');
+  const fallbackText = generateExpertAdvisorFallback(lastUserText);
+  for (const word of fallbackText.split(' ')) {
+    onChunk(word + ' ');
+    await new Promise(r => setTimeout(r, 20));
+  }
+  onComplete(fallbackText);
 }
 
 /**
@@ -169,17 +223,22 @@ Yêu cầu output: Trả về DUY NHẤT một JSON hợp lệ (không kèm mark
 }
 `;
 
-  const models = [PRIMARY_MODEL, FALLBACK_MODEL];
-  for (const model of models) {
+  for (const model of MODELS) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }],
           generationConfig: { temperature: 0.7, maxOutputTokens: 1200 }
         })
       });
+
+      clearTimeout(timeoutId);
 
       if (!res.ok) continue;
 

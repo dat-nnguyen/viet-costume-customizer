@@ -89,12 +89,20 @@ export async function streamGeminiChatResponse(
               onChunk(cleanText, actionPayload);
             } else if (parsed.error) {
               console.warn('Server chat error:', parsed.error);
+              accumulatedRaw = 'Dạ, ' + (parsed.error || 'hệ thống đang bận một chút.');
+              const { cleanText, actionPayload } = parseActionTag(accumulatedRaw);
+              onChunk(cleanText, actionPayload);
             }
           } catch {
             // chunk json dở dang
           }
         }
       }
+    }
+
+    if (!accumulatedRaw || accumulatedRaw.trim().length === 0) {
+      accumulatedRaw = 'Dạ, tôi chưa nhận được phản hồi. Bạn có thể hỏi lại về trang phục hoặc dịp phối đồ sắp tới được không ạ?';
+      onChunk(accumulatedRaw);
     }
 
     const { cleanText, actionPayload } = parseActionTag(accumulatedRaw);
