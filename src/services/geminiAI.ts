@@ -119,94 +119,31 @@ export function generateLocalExpertRecommendation(req: AIStylistRequest): AIStyl
   };
 }
 
-// Gọi Gemini API trực tuyến khi có API Key
+// Gọi Backend Server (/api/stylist) để sinh gợi ý bằng Gemini, fallback về Local Expert Engine nếu offline
 export async function generateAIStylistRecommendation(req: AIStylistRequest): Promise<AIStylistRecommendation> {
-  const apiKey = req.apiKey || import.meta.env.VITE_GEMINI_API_KEY;
-
-  if (!apiKey || apiKey.trim() === '') {
-    // Không có API key -> Chạy ngay offline engine mượt mà
-    return generateLocalExpertRecommendation(req);
-  }
-
   try {
-    const promptText = `
-Bạn là "AI Stylist & Nhà nghiên cứu Cổ phục Việt Nam", chuyên gia tư vấn phối trang phục truyền thống Việt Nam theo phong cách Gen Z Remix.
-Hãy tư vấn một bản phối trang phục dựa trên các thông số sau:
-- Dịp sử dụng: ${req.occasionId}
-- Phong cách mong muốn: ${req.remixStyleId}
-- Thời tiết / Địa điểm: ${req.weather}
-- Ghi chú thêm của người dùng: "${req.userPrompt || 'Tối ưu bản phối trẻ trung nhưng tôn trọng văn hóa'}"
+    const response = await fetch('/api/stylist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        occasionId: req.occasionId,
+        remixStyleId: req.remixStyleId,
+        weather: req.weather,
+        userPrompt: req.userPrompt
+      })
+    });
 
-Danh sách ID trang phục hợp lệ: ['ngu_than_chen', 'ao_tac', 'nhat_binh', 'giao_linh', 'tu_than', 'ba_ba', 'doi_kham', 'ao_dai_tan_thoi']
-Danh sách ID màu hợp lệ: ['do_dieu', 'cham_tham', 'vang_hoang_yen', 'xanh_bich_thuy', 'trang_nga', 'tim_hue', 'nau_cu_nau', 'hong_sen', 'den_huyen', 'xanh_co_vit', 'vang_mo_ga', 'xanh_da_troi']
-Danh sách ID phụ kiện hợp lệ: ['khan_dong', 'khan_vanh_day', 'non_quai_thao', 'non_la', 'guoc_moc', 'hai_nhung_theu', 'quat_xep_gam', 'khan_ran', 'sneakers_trang', 'chelsea_boots', 'kinh_ram_retro', 'mu_beret', 'tui_tote_dong_ho', 'chuoi_ngoc_trai']
-Danh sách bottomType: ['pant_loose', 'skirt_silk', 'trousers_modern', 'skirt_pleated']
-
-Yêu cầu output: Trả về DUY NHẤT một JSON hợp lệ (không kèm markdown code block \`\`\`json) với cấu trúc:
-{
-  "outfitName": "Tên bản phối thật thơ và ấn tượng",
-  "concept": "Tóm tắt ý tưởng bản phối trong 1-2 câu",
-  "costumeId": "một trong các ID trang phục trên",
-  "outerColorId": "ID màu áo ngoài",
-  "innerColorId": "ID màu áo trong",
-  "bottomColorId": "ID màu quần/váy",
-  "bottomType": "pant_loose",
-  "accessoryIds": ["danh sách 2-4 ID phụ kiện"],
-  "hairAndMakeup": "Gợi ý kiểu tóc và makeup phù hợp",
-  "storytelling": "Ý nghĩa lịch sử và câu chuyện văn hóa của bản phối này",
-  "whyItWorks": "Giải thích vì sao bản phối này vừa chuẩn mực vừa hợp Gen Z",
-  "fiveElementsInsight": "Phân tích triết lý ngũ hành tương sinh giữa các màu sắc đã chọn"
-}
-`;
-
-    const modelsToTry = ['gemini-3.7-flash', 'gemini-3.5-flash'];
-    let candidateText: string | undefined;
-
-    for (const model of modelsToTry) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptText }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1200
-              }
-            })
-          }
-        );
-
-        if (!response.ok) {
-          console.warn(`Gemini API (${model}) trả về lỗi HTTP:`, response.status);
-          continue;
-        }
-
-        const data = await response.json();
-        candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (candidateText) break;
-      } catch (callErr) {
-        console.warn(`Lỗi khi gọi model ${model}:`, callErr);
+    if (response.ok) {
+      const data = await response.json();
+      if (data && data.outfitName && data.costumeId) {
+        return data as AIStylistRecommendation;
       }
     }
-
-    if (!candidateText) {
-      return generateLocalExpertRecommendation(req);
-    }
-
-    // Làm sạch chuỗi JSON nếu Gemini trả về kèm markdown
-    const cleanedText = candidateText
-      .replace(/^```json\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim();
-
-    const parsed: AIStylistRecommendation = JSON.parse(cleanedText);
-    return parsed;
+    console.warn('Backend /api/stylist không trả về kết quả hợp lệ, chuyển sang Local Expert Engine');
+    return generateLocalExpertRecommendation(req);
   } catch (err) {
-    console.warn('Lỗi khi gọi Gemini API, chuyển đổi dự phòng sang Local Expert Engine:', err);
+    console.warn('Không thể kết nối /api/stylist backend, chuyển sang Local Expert Engine:', err);
     return generateLocalExpertRecommendation(req);
   }
 }
+

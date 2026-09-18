@@ -34,3 +34,9 @@ dist-ssr
 # Internal tools and workspaces
 .aider-desk/
 .impeccable/
+
+# Database files
+data/*.db
+data/*.db-journal
+data/*.db-wal
+

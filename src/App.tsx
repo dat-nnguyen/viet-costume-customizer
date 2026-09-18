@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { OutfitState, CostumeId, HeritageColor, CustomFaceConfig, AIStylistRecommendation, ChatActionPayload } from './types';
 import { TRADITIONAL_COSTUMES } from './data/traditionalCostumes';
 import { HERITAGE_COLORS } from './data/heritagePalettes';
 import { evaluateOutfitCulture } from './data/culturalRules';
-import { getSavedLookbooks } from './services/storageService';
+import { getSavedLookbooks, fetchLookbooksFromDB } from './services/storageService';
 
 // Components
 import { Header } from './components/Header';
@@ -93,8 +93,18 @@ export const App: React.FC = () => {
   // Saved Lookbooks
   const [savedLookbooks, setSavedLookbooks] = useState(() => getSavedLookbooks());
 
+  useEffect(() => {
+    fetchLookbooksFromDB().then(lbs => {
+      if (lbs && lbs.length > 0) {
+        setSavedLookbooks(lbs);
+      }
+    });
+  }, []);
+
   const refreshSavedLookbooks = () => {
-    setSavedLookbooks(getSavedLookbooks());
+    fetchLookbooksFromDB().then(lbs => {
+      setSavedLookbooks(lbs);
+    });
   };
 
   // Outfit State chính

@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  viet-costume-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: viet-costume-customizer
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      # Khóa Google Gemini API bí mật ở server-side
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Chuỗi kết nối Database:
+      # - Mặc định để trống: dùng SQLite lưu vào volume bên dưới
+      # - Hoặc kết nối Azure Database for PostgreSQL:
+      #   DATABASE_URL=postgres://<user>:<pass>@<azure-host>.postgres.database.azure.com:5432/viet_costume?sslmode=require
+      - DATABASE_URL=${DATABASE_URL:-}
+    volumes:
+      # Lưu trữ bền vững dữ liệu SQLite
+      - viet_costume_data:/app/data
+
+volumes:
+  viet_costume_data:
+    driver: local
