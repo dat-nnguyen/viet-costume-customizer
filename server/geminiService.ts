@@ -1,8 +1,12 @@
-// Danh sách model ưu tiên theo tốc độ phản hồi thực tế và độ sẵn sàng của Google API
-// 1. gemini-3.5-flash-lite: Tốc độ phản hồi cực nhanh (<1s TTFB), không bị lỗi quá tải 503
-// 2. gemini-3.6-flash: Model được Google khuyến nghị chính thức
-// 3. gemini-3.7-flash: Model thế hệ mới (dự phòng khi hết spike demand)
-const MODELS = ['gemini-3.5-flash-lite', 'gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.5-flash'];
+// Chiến lược Thác Đổ Thông Minh (Dynamic Model Cascade):
+// 1. gemini-3.8-flash: Chất lượng tư vấn sâu sắc nhất từ Google AI Studio (Timeout 3s nếu Google bị nghẽn tải)
+// 2. gemini-3.5-flash-lite: Siêu tốc độ (<1s TTFB), tài nguyên dồi dào, chuyên dụng cho chatbot realtime
+// 3. gemini-3.6-flash: Model dự phòng tiêu chuẩn của Google
+const MODELS = [
+  { name: 'gemini-3.8-flash', timeoutMs: 3000 },
+  { name: 'gemini-3.5-flash-lite', timeoutMs: 6000 },
+  { name: 'gemini-3.6-flash', timeoutMs: 6000 }
+];
 
 // System Instruction với Guardrail nghiêm ngặt: Chỉ tư vấn Cổ phục Việt Nam & Gen Z Remix
 const SYSTEM_INSTRUCTION = `
@@ -97,11 +101,11 @@ export async function streamChatToResponse(
     parts: [{ text: m.text }]
   }));
 
-  for (const model of MODELS) {
+  for (const { name: model, timeoutMs } of MODELS) {
     try {
-      // Giới hạn timeout 5 giây mỗi model để không bị treo nếu Google quá tải
+      // Giới hạn timeout tùy biến mỗi model để không bị treo nếu Google quá tải
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
       const response = await fetch(endpoint, {
@@ -223,10 +227,10 @@ Yêu cầu output: Trả về DUY NHẤT một JSON hợp lệ (không kèm mark
 }
 `;
 
-  for (const model of MODELS) {
+  for (const { name: model, timeoutMs } of MODELS) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
