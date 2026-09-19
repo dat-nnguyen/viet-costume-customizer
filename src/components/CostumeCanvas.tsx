@@ -51,26 +51,47 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [generationSuccessToast, setGenerationSuccessToast] = useState<boolean>(false);
 
+  // Kiểm tra xem trang phục có đang sử dụng màu sắc nguyên bản (default heritage colors) không
+  const isDefaultColors = 
+    outfit.outerColor.id === costume.defaultColors.outer &&
+    outfit.bottomColor.id === costume.defaultColors.bottom;
+
   // Ảnh được chỉnh sửa màu sắc trực tiếp trên thớ vải (Pixel-Level Recolor)
   const [recoloredPhotoUrl, setRecoloredPhotoUrl] = useState<string>(costume.imageUrl);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const directUploadRef = useRef<HTMLInputElement>(null);
 
-  // Tự động biến đổi màu sắc trực tiếp trên ảnh gốc khi đổi Cổ Sắc Ngũ Hành
+  // 1. Khi đổi sang trang phục khác, chuyển ngay lập tức về ảnh thực tế của trang phục mới (0ms độ trễ)
   useEffect(() => {
+    setRecoloredPhotoUrl(costume.imageUrl);
+  }, [costume.id, costume.imageUrl]);
+
+  // 2. Chỉ chạy thuật toán biến đổi màu khi người dùng thực sự chọn màu tùy chỉnh khác màu gốc
+  useEffect(() => {
+    if (isDefaultColors) {
+      setRecoloredPhotoUrl(costume.imageUrl);
+      return;
+    }
+
     let isMounted = true;
-    recolorCostumePhoto(costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id)
-      .then(url => {
-        if (isMounted) {
-          setRecoloredPhotoUrl(url);
-        }
-      })
-      .catch(err => {
-        console.warn('Lỗi xử lý màu sắc ảnh trực tiếp:', err);
-      });
-    return () => { isMounted = false; };
-  }, [costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id]);
+    const timer = setTimeout(() => {
+      recolorCostumePhoto(costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id)
+        .then(url => {
+          if (isMounted) {
+            setRecoloredPhotoUrl(url);
+          }
+        })
+        .catch(err => {
+          console.warn('Lỗi xử lý màu sắc ảnh trực tiếp:', err);
+        });
+    }, 40);
+
+    return () => { 
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id, isDefaultColors]);
 
   // Tự động chuyển về chế độ Live Realtime khi người dùng đổi màu sắc, trang phục hoặc phụ kiện
   const lastCustomKeyRef = useRef(`${costume.id}-${outfit.outerColor.id}-${outfit.innerColor.id}-${outfit.bottomColor.id}-${outfit.selectedAccessories.join(',')}`);

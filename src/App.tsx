@@ -99,6 +99,12 @@ export const App: React.FC = () => {
         setSavedLookbooks(lbs);
       }
     });
+
+    // Preload toàn bộ ảnh 8 dòng cổ phục vào cache trình duyệt để chuyển đổi tức thì (0ms)
+    TRADITIONAL_COSTUMES.forEach(costume => {
+      const img = new Image();
+      img.src = costume.imageUrl;
+    });
   }, []);
 
   const refreshSavedLookbooks = () => {

@@ -62,18 +62,6 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-// Kiểm tra điểm nằm trong đa giác
-function isPointInPoly(x: number, y: number, poly: number[][]): boolean {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const xi = poly[i][0], yi = poly[i][1];
-    const xj = poly[j][0], yj = poly[j][1];
-    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
-
 // Tọa độ bounding phom áo & quần chuẩn mực theo tỷ lệ 896x1200
 const NGU_THAN_ROBE_POLY = [
   [395, 245], [350, 260], [310, 320], [280, 420], [285, 520], [300, 615],
@@ -87,9 +75,60 @@ const NGU_THAN_PANTS_POLY = [
   [475, 880], [470, 1118], [590, 1118], [585, 880]
 ];
 
+// Pre-rasterized binary mask: 1 = Robe, 2 = Pants, 0 = Outside
+// Rendered once via 2D Canvas in <1ms, enabling O(1) direct memory lookup per pixel
+let cachedMask: Uint8Array | null = null;
+
+function getCostumeMask(): Uint8Array {
+  if (cachedMask) return cachedMask;
+  const width = 896;
+  const height = 1200;
+  const mask = new Uint8Array(width * height);
+
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // 1: Robe
+      ctx.fillStyle = '#010101';
+      ctx.beginPath();
+      NGU_THAN_ROBE_POLY.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+      ctx.closePath();
+      ctx.fill();
+
+      // 2: Pants
+      ctx.fillStyle = '#020202';
+      ctx.beginPath();
+      NGU_THAN_PANTS_POLY.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
+      ctx.closePath();
+      ctx.fill();
+
+      const imgData = ctx.getImageData(0, 0, width, height);
+      const data = imgData.data;
+      for (let i = 0; i < width * height; i++) {
+        mask[i] = data[i * 4]; // 1 for robe, 2 for pants, 0 for outside
+      }
+    }
+  }
+
+  cachedMask = mask;
+  return mask;
+}
+
+/**
+ * Preload toàn bộ ảnh cổ phục vào bộ nhớ đệm
+ */
+export function preloadAllCostumes(imageUrls: string[]): void {
+  imageUrls.forEach(url => {
+    preloadImage(url).catch(() => {});
+  });
+}
+
 /**
  * Biến đổi trực tiếp màu sắc pixel của bức ảnh cổ phục
- * Không dùng SVG phủ ngoài, không làm giả tạo bức ảnh
+ * Tối ưu hóa cực đại với TypedArray Mask & Bounding-Box Skip
  */
 export async function recolorCostumePhoto(
   baseImageUrl: string,
@@ -141,21 +180,25 @@ export async function recolorCostumePhoto(
   const outerLBoost = outerL > 0.45 ? 1.6 : outerL > 0.35 ? 1.35 : 1.15;
   const bottomLBoost = bottomL > 0.45 ? 1.5 : bottomL > 0.35 ? 1.3 : 1.15;
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      // Chuẩn hóa tọa độ về hệ 896x1200
-      const normX = x / sx;
-      const normY = y / sy;
+  const mask = getCostumeMask();
 
-      const inRobe = isPointInPoly(normX, normY, NGU_THAN_ROBE_POLY);
-      const inPants = isPointInPoly(normX, normY, NGU_THAN_PANTS_POLY);
+  // Bounding box skip: y chỉ nằm trong khoảng 245..1118, x trong khoảng 280..635
+  const startY = Math.max(0, Math.floor(245 * sy));
+  const endY = Math.min(height, Math.ceil(1119 * sy));
+  const startX = Math.max(0, Math.floor(280 * sx));
+  const endX = Math.min(width, Math.ceil(636 * sx));
 
-      if (!inRobe && !inPants) continue;
+  for (let y = startY; y < endY; y++) {
+    const normY = Math.floor(y / sy);
+    const rowOffset = y * width;
+    const maskRowOffset = normY * 896;
 
-      const offset = (y * width + x) * 4;
-      const r = data[offset];
-      const g = data[offset + 1];
-      const b = data[offset + 2];
+    for (let x = startX; x < endX; x++) {
+      const normX = Math.floor(x / sx);
+      const maskVal = mask[maskRowOffset + normX];
+      if (!maskVal) continue;
+
+      const inRobe = maskVal === 1;
 
       // Loại trừ vùng da tay (Bàn tay người mẫu)
       if ((normX >= 335 && normX <= 395 && normY >= 515 && normY <= 655) ||
@@ -165,6 +208,11 @@ export async function recolorCostumePhoto(
 
       // Loại trừ cằm & cổ áo
       if (normY <= 246) continue;
+
+      const offset = (rowOffset + x) * 4;
+      const r = data[offset];
+      const g = data[offset + 1];
+      const b = data[offset + 2];
 
       // Loại trừ mép cổ lót trắng và khuy bạc cài áo sáng bóng
       if (r > 205 && g > 205 && b > 205 && normY < 275) continue;
@@ -176,7 +224,6 @@ export async function recolorCostumePhoto(
       // Nhận diện màu da người (R > G > B và sắc tố ấm)
       if (r > 115 && g > 75 && r > b + 18 && (r - g) < 65) continue;
 
-      // ĐÂY CHÍNH LÀ THỚ VẢI CỔ PHỤC THỰC TẾ!
       // Chuyển đổi HSL trực tiếp trên pixel ảnh
       const [, , l] = rgbToHsl(r, g, b);
 
@@ -200,7 +247,7 @@ export async function recolorCostumePhoto(
   ctx.putImageData(imgData, 0, 0);
 
   // Xuất ra chuỗi JPEG chất lượng cao
-  const recoloredUrl = canvas.toDataURL('image/jpeg', 0.94);
+  const recoloredUrl = canvas.toDataURL('image/jpeg', 0.90);
   recolorCache.set(cacheKey, recoloredUrl);
   return recoloredUrl;
 }
