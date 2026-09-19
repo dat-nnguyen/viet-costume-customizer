@@ -165,87 +165,50 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
         />
 
         {/* Top Floating Controls */}
-        <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2 z-20">
+        <div className="w-full flex items-center justify-between gap-2 z-20">
           
-          {/* Badge Trang Phục */}
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <span className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-[#1a1c27] border border-[#2d3145] text-white flex items-center gap-1.5 sm:gap-2 shadow-sm max-w-[145px] sm:max-w-none truncate">
+          {/* Badge Trang Phục & Triều Đại */}
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 mr-1">
+            <span className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-[#1a1c27] border border-[#2d3145] text-white flex items-center gap-1.5 sm:gap-2 shadow-sm whitespace-nowrap flex-shrink-0">
               <span className="w-2 h-2 rounded-full bg-[#e09f3e] animate-pulse flex-shrink-0" />
-              <span className="truncate">{costume.name}</span>
+              <span className="truncate max-w-[130px] sm:max-w-none">{costume.name}</span>
             </span>
-            <span className="hidden md:inline-block px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#14151f] text-gray-400 border border-[#262838]">
+            <span 
+              className="hidden sm:inline-block px-2.5 py-1 rounded-full text-[11px] font-medium bg-[#14151f] text-gray-400 border border-[#262838] whitespace-nowrap truncate max-w-[150px] lg:max-w-[180px]"
+              title={costume.dynasty}
+            >
               {costume.dynasty}
             </span>
           </div>
 
-          {/* Top Controls Right: Zoom & View Toggle */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {viewMode === 'editorial' && (
-              <div className="hidden md:flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-xs items-center gap-1">
-                <button
-                  onClick={() => setZoomMode('full')}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-                    zoomMode === 'full'
-                      ? 'bg-[#252838] text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  title="Xem toàn dáng trang phục"
-                >
-                  Toàn Thân
-                </button>
-                <button
-                  onClick={() => setZoomMode('close')}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition-all flex items-center gap-1 ${
-                    zoomMode === 'close'
-                      ? 'bg-[#e09f3e] text-[#090a0f] font-bold shadow-sm'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  title="Soi cận cảnh hoa văn & cổ áo"
-                >
-                  <ZoomIn className="w-3 h-3" />
-                  <span>Cổ Áo</span>
-                </button>
-                <button
-                  onClick={() => setZoomMode('waist')}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
-                    zoomMode === 'waist'
-                      ? 'bg-[#252838] text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  title="Soi khuy cài & thân áo"
-                >
-                  Khuy Cài
-                </button>
-              </div>
-            )}
-
-            {/* Toggle View: Người Mẫu Thật vs. Sơ Đồ Lớp Áo */}
-            <div className="flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-xs">
-              <button
-                onClick={() => setViewMode('editorial')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all ${
-                  viewMode === 'editorial'
-                    ? 'bg-[#c94b4b] text-white shadow-sm'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Người Mẫu Thật</span>
-                <span className="sm:hidden text-[11px]">Mẫu Thật</span>
-              </button>
-              <button
-                onClick={() => setViewMode('schema')}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all ${
-                  viewMode === 'schema'
-                    ? 'bg-[#c94b4b] text-white shadow-sm'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sơ Đồ Cấu Trúc</span>
-                <span className="sm:hidden text-[11px]">Sơ Đồ</span>
-              </button>
-            </div>
+          {/* Toggle View: Người Mẫu Thật vs. Sơ Đồ Lớp Áo */}
+          <div className="flex bg-[#161824] p-1 rounded-xl border border-[#2b2f42] text-xs flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('editorial')}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all whitespace-nowrap ${
+                viewMode === 'editorial'
+                  ? 'bg-[#c94b4b] text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <ImageIcon className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">Người Mẫu Thật</span>
+              <span className="sm:hidden text-[11px]">Mẫu Thật</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('schema')}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg font-medium transition-all whitespace-nowrap ${
+                viewMode === 'schema'
+                  ? 'bg-[#c94b4b] text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">Sơ Đồ Cấu Trúc</span>
+              <span className="sm:hidden text-[11px]">Sơ Đồ</span>
+            </button>
           </div>
 
         </div>
@@ -441,6 +404,47 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
                   </div>
                 </>
               )}
+
+              {/* Floating Camera Lens Zoom Controls */}
+              <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-[#0c0d16]/90 backdrop-blur-md px-1.5 py-1 rounded-full border border-white/15 shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => setZoomMode('full')}
+                  className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                    zoomMode === 'full'
+                      ? 'bg-[#252838] text-white shadow-sm border border-white/10'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Xem toàn dáng trang phục"
+                >
+                  Toàn Thân
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZoomMode('close')}
+                  className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] font-medium transition-all flex items-center gap-1 whitespace-nowrap ${
+                    zoomMode === 'close'
+                      ? 'bg-[#e09f3e] text-[#090a0f] font-bold shadow-md'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Soi cận cảnh hoa văn & cổ áo"
+                >
+                  <ZoomIn className="w-3 h-3" />
+                  <span>Cổ Áo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZoomMode('waist')}
+                  className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] font-medium transition-all whitespace-nowrap ${
+                    zoomMode === 'waist'
+                      ? 'bg-[#252838] text-white shadow-sm border border-white/10'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Soi khuy cài & thân áo"
+                >
+                  Khuy Cài
+                </button>
+              </div>
 
             </div>
           ) : (
