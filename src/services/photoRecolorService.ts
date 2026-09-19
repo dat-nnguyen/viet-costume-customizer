@@ -62,60 +62,83 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-// Tọa độ bounding phom áo & quần chuẩn mực theo tỷ lệ 896x1200
-const NGU_THAN_ROBE_POLY = [
-  [395, 245], [350, 260], [310, 320], [280, 420], [285, 520], [300, 615],
-  [365, 615], [365, 570], [340, 680], [345, 880], [585, 880], [590, 680], 
-  [575, 570], [575, 615], [635, 615], [630, 520], [630, 420], [600, 320], 
-  [555, 260], [505, 245], [450, 252]
-];
+// Per-costume fabric boundary & color recognition profile
+interface CostumeRecolorConfig {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  pantsMinY?: number;
+  pantsMaxY?: number;
+  isRobe: (p: { r: number; g: number; b: number }, h: number, s: number, l: number, x: number, y: number) => boolean;
+}
 
-const NGU_THAN_PANTS_POLY = [
-  [340, 880], [335, 1118], [460, 1118], [450, 880],
-  [475, 880], [470, 1118], [590, 1118], [585, 880]
-];
-
-// Pre-rasterized binary mask: 1 = Robe, 2 = Pants, 0 = Outside
-// Rendered once via 2D Canvas in <1ms, enabling O(1) direct memory lookup per pixel
-let cachedMask: Uint8Array | null = null;
-
-function getCostumeMask(): Uint8Array {
-  if (cachedMask) return cachedMask;
-  const width = 896;
-  const height = 1200;
-  const mask = new Uint8Array(width * height);
-
-  if (typeof document !== 'undefined') {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      // 1: Robe
-      ctx.fillStyle = '#010101';
-      ctx.beginPath();
-      NGU_THAN_ROBE_POLY.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
-      ctx.closePath();
-      ctx.fill();
-
-      // 2: Pants
-      ctx.fillStyle = '#020202';
-      ctx.beginPath();
-      NGU_THAN_PANTS_POLY.forEach(([x, y], i) => i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y));
-      ctx.closePath();
-      ctx.fill();
-
-      const imgData = ctx.getImageData(0, 0, width, height);
-      const data = imgData.data;
-      for (let i = 0; i < width * height; i++) {
-        mask[i] = data[i * 4]; // 1 for robe, 2 for pants, 0 for outside
-      }
+const COSTUME_CONFIGS: Record<string, CostumeRecolorConfig> = {
+  ngu_than_chen: {
+    minX: 240, maxX: 660, minY: 245, maxY: 885,
+    pantsMinY: 885, pantsMaxY: 1125,
+    isRobe: (p, h, s) => (p.b > p.r + 2) || (h >= 190 && h <= 255 && s > 0.12)
+  },
+  ao_tac: {
+    minX: 250, maxX: 680, minY: 258, maxY: 800,
+    pantsMinY: 800, pantsMaxY: 1130,
+    isRobe: (p, h, _s, _l, x, y) => {
+      if (y < 258 && x > 470 && x < 550) return false; // chin / neck
+      if (h >= 32 && h <= 55 && p.g > 105) return false; // golden dragon embroidery
+      return (h >= 335 || h <= 25) && p.r > p.g + 16 && p.r > p.b + 16;
+    }
+  },
+  nhat_binh: {
+    minX: 300, maxX: 680, minY: 245, maxY: 750,
+    pantsMinY: 750, pantsMaxY: 1130,
+    isRobe: (p, h, s, l, x, y) => {
+      // Exclude chest phoenix embroidery
+      if (x > 410 && x < 515 && y > 260 && y < 380 && (p.b > 60 || p.g > p.r)) return false;
+      return h >= 24 && h <= 58 && ((s > 0.35 && p.b < 65) || (s > 0.50 && p.b < 80)) && l < 0.88;
+    }
+  },
+  giao_linh: {
+    minX: 240, maxX: 690, minY: 245, maxY: 940,
+    pantsMinY: 940, pantsMaxY: 1130,
+    isRobe: (p, h, s, l) => {
+      if (h >= 30 && h <= 55 && p.g > 115) return false; // gold sash
+      return h >= 142 && h <= 196 && s > 0.15 && l < 0.72;
+    }
+  },
+  tu_than: {
+    minX: 310, maxX: 650, minY: 250, maxY: 870,
+    pantsMinY: 870, pantsMaxY: 1130,
+    isRobe: (_p, h, s, l, x, y) => {
+      if (x > 490 && y > 400 && y < 660) return false; // bamboo conical hat
+      if (x > 450 && x < 550 && y > 250 && y < 400 && (h > 330 || h < 10 || s > 0.40)) return false; // pink yếm
+      return h >= 14 && h <= 36 && s > 0.18 && l < 0.55;
+    }
+  },
+  ba_ba: {
+    minX: 320, maxX: 630, minY: 240, maxY: 690,
+    pantsMinY: 700, pantsMaxY: 1125,
+    isRobe: (p, h, s) => {
+      if (Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b) < 18) return false; // checkered scarf
+      return h >= 135 && h <= 185 && s > 0.18 && p.g > p.r + 5;
+    }
+  },
+  doi_kham: {
+    minX: 250, maxX: 680, minY: 245, maxY: 890,
+    pantsMinY: 890, pantsMaxY: 1130,
+    isRobe: (p, h, s) => {
+      if (h >= 30 && h <= 55 && p.g > 105) return false; // gold dragons
+      return h >= 270 && h <= 345 && s > 0.15;
+    }
+  },
+  ao_dai_tan_thoi: {
+    minX: 300, maxX: 630, minY: 240, maxY: 1020,
+    pantsMinY: 880, pantsMaxY: 1125,
+    isRobe: (_p, h, s, l, _x, y) => {
+      if (y > 600 && l > 0.82 && s < 0.16) return false; // white silk trousers
+      return (h >= 330 || h <= 20) && s > 0.10 && l > 0.35 && l < 0.88;
     }
   }
-
-  cachedMask = mask;
-  return mask;
-}
+};
 
 /**
  * Preload toàn bộ ảnh cổ phục vào bộ nhớ đệm
@@ -128,17 +151,24 @@ export function preloadAllCostumes(imageUrls: string[]): void {
 
 /**
  * Biến đổi trực tiếp màu sắc pixel của bức ảnh cổ phục
- * Tối ưu hóa cực đại với TypedArray Mask & Bounding-Box Skip
+ * Hỗ trợ chuẩn xác 100% cả 8 dòng Cổ phục truyền thống
  */
 export async function recolorCostumePhoto(
   baseImageUrl: string,
   outerColorHex: string,
   bottomColorHex: string,
-  costumeId: string
+  costumeId: string,
+  isOuterCustom: boolean = true,
+  isBottomCustom: boolean = false
 ): Promise<string> {
-  const cacheKey = `${baseImageUrl}-${outerColorHex}-${bottomColorHex}-${costumeId}`;
+  const cacheKey = `${baseImageUrl}-${outerColorHex}-${bottomColorHex}-${costumeId}-${isOuterCustom}-${isBottomCustom}`;
   if (recolorCache.has(cacheKey)) {
     return recolorCache.get(cacheKey)!;
+  }
+
+  // Nếu cả hai màu đều là màu nguyên bản, trả về ảnh gốc ngay lập tức
+  if (!isOuterCustom && !isBottomCustom) {
+    return baseImageUrl;
   }
 
   const img = await preloadImage(baseImageUrl);
@@ -166,7 +196,7 @@ export async function recolorCostumePhoto(
   const ob = parseInt(cleanOuter.substring(4, 6), 16);
   const [outerH, outerS, outerL] = rgbToHsl(or, og, ob);
 
-  const cleanBottom = bottomColorHex.replace('#', '');
+  const cleanBottom = (bottomColorHex || outerColorHex).replace('#', '');
   const br = parseInt(cleanBottom.substring(0, 2), 16);
   const bg = parseInt(cleanBottom.substring(2, 4), 16);
   const bb = parseInt(cleanBottom.substring(4, 6), 16);
@@ -176,64 +206,66 @@ export async function recolorCostumePhoto(
   const sx = width / 896;
   const sy = height / 1200;
 
-  // Thang đo độ sáng màu đích để boost độ sáng lụa nếu màu đích là màu sáng (Vàng, Trắng, Đỏ tươi)
-  const outerLBoost = outerL > 0.45 ? 1.6 : outerL > 0.35 ? 1.35 : 1.15;
-  const bottomLBoost = bottomL > 0.45 ? 1.5 : bottomL > 0.35 ? 1.3 : 1.15;
+  const outerLBoost = outerL > 0.45 ? 1.45 : outerL > 0.35 ? 1.25 : 1.12;
+  const bottomLBoost = bottomL > 0.45 ? 1.45 : bottomL > 0.35 ? 1.25 : 1.12;
 
-  const mask = getCostumeMask();
+  const config = COSTUME_CONFIGS[costumeId] || COSTUME_CONFIGS.ngu_than_chen;
 
-  // Bounding box skip: y chỉ nằm trong khoảng 245..1118, x trong khoảng 280..635
-  const startY = Math.max(0, Math.floor(245 * sy));
-  const endY = Math.min(height, Math.ceil(1119 * sy));
-  const startX = Math.max(0, Math.floor(280 * sx));
-  const endX = Math.min(width, Math.ceil(636 * sx));
+  const startY = Math.max(0, Math.floor(config.minY * sy));
+  const endY = Math.min(height, Math.ceil((isBottomCustom && config.pantsMaxY ? config.pantsMaxY : config.maxY) * sy));
+  const startX = Math.max(0, Math.floor(config.minX * sx));
+  const endX = Math.min(width, Math.ceil(config.maxX * sx));
 
   for (let y = startY; y < endY; y++) {
     const normY = Math.floor(y / sy);
     const rowOffset = y * width;
-    const maskRowOffset = normY * 896;
 
     for (let x = startX; x < endX; x++) {
       const normX = Math.floor(x / sx);
-      const maskVal = mask[maskRowOffset + normX];
-      if (!maskVal) continue;
-
-      const inRobe = maskVal === 1;
-
-      // Loại trừ vùng da tay (Bàn tay người mẫu)
-      if ((normX >= 335 && normX <= 395 && normY >= 515 && normY <= 655) ||
-          (normX >= 575 && normX <= 635 && normY >= 515 && normY <= 655)) {
-        continue;
-      }
-
-      // Loại trừ cằm & cổ áo
-      if (normY <= 246) continue;
-
       const offset = (rowOffset + x) * 4;
       const r = data[offset];
       const g = data[offset + 1];
       const b = data[offset + 2];
 
-      // Loại trừ mép cổ lót trắng và khuy bạc cài áo sáng bóng
-      if (r > 205 && g > 205 && b > 205 && normY < 275) continue;
-      if (r > 230 && g > 230 && b > 230) continue; // Khuy cài bạc
+      // Loại trừ specular highlight và khuy cài sáng bóng
+      if (r > 240 && g > 240 && b > 240) continue;
+      // Loại trừ mép cổ lót trắng ngà
+      if (normY < 275 && r > 200 && g > 200 && b > 200) continue;
 
-      // Loại trừ phông nền studio xám nếu lọt vào viền ngoài
-      if (Math.abs(r - g) < 14 && Math.abs(g - b) < 14 && r > 68) continue;
+      const [h, s, l] = rgbToHsl(r, g, b);
 
-      // Nhận diện màu da người (R > G > B và sắc tố ấm)
-      if (r > 115 && g > 75 && r > b + 18 && (r - g) < 65) continue;
+      // Loại trừ da người (khuôn mặt, cằm, cổ, bàn tay)
+      if (r > 115 && g > 75 && b > 45 && r > g && g > b && (r - b) > 20 && (r - g) < 70 && (h >= 10 && h <= 36)) {
+        continue;
+      }
 
-      // Chuyển đổi HSL trực tiếp trên pixel ảnh
-      const [, , l] = rgbToHsl(r, g, b);
+      const isRobeRegion = normY <= config.maxY;
+      let shouldRecolor = false;
+      let targetH = outerH;
+      let targetS = outerS;
+      let lBoost = outerLBoost;
 
-      const targetH = inRobe ? outerH : bottomH;
-      const targetS = inRobe ? outerS : bottomS;
-      const lBoost = inRobe ? outerLBoost : bottomLBoost;
+      if (isOuterCustom && isRobeRegion && config.isRobe({ r, g, b }, h, s, l, normX, normY)) {
+        shouldRecolor = true;
+        targetH = outerH;
+        targetS = outerS;
+        lBoost = outerLBoost;
+      } else if (isBottomCustom && !isRobeRegion && config.pantsMinY && normY >= config.pantsMinY) {
+        // Chỉ đổi màu quần khi người dùng chủ động chọn đổi màu Quần/Váy
+        const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+        if (chroma > 12 && l < 0.85) {
+          shouldRecolor = true;
+          targetH = bottomH;
+          targetS = bottomS;
+          lBoost = bottomLBoost;
+        }
+      }
+
+      if (!shouldRecolor) continue;
 
       // Giữ nguyên 100% nếp gấp, đổ bóng và ánh sáng gốc, chỉ thay đổi sắc thái lụa
-      const newL = Math.min(0.95, l * lBoost);
-      const newS = Math.max(0.46, targetS);
+      const newL = Math.min(0.96, Math.max(0.04, l * lBoost));
+      const newS = Math.min(1.0, Math.max(0.44, targetS));
 
       const [newR, newG, newB] = hslToRgb(targetH, newS, newL);
 

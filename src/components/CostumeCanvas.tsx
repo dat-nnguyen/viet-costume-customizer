@@ -51,10 +51,10 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
   const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
   const [generationSuccessToast, setGenerationSuccessToast] = useState<boolean>(false);
 
-  // Kiểm tra xem trang phục có đang sử dụng màu sắc nguyên bản (default heritage colors) không
-  const isDefaultColors = 
-    outfit.outerColor.id === costume.defaultColors.outer &&
-    outfit.bottomColor.id === costume.defaultColors.bottom;
+  // Kiểm tra trạng thái tùy chỉnh màu sắc độc lập giữa Áo Ngoài và Quần/Váy
+  const isOuterCustom = outfit.outerColor.id !== costume.defaultColors.outer;
+  const isBottomCustom = outfit.bottomColor.id !== costume.defaultColors.bottom;
+  const isDefaultColors = !isOuterCustom && !isBottomCustom;
 
   // Ảnh được chỉnh sửa màu sắc trực tiếp trên thớ vải (Pixel-Level Recolor)
   const [recoloredPhotoUrl, setRecoloredPhotoUrl] = useState<string>(costume.imageUrl);
@@ -76,7 +76,14 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
 
     let isMounted = true;
     const timer = setTimeout(() => {
-      recolorCostumePhoto(costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id)
+      recolorCostumePhoto(
+        costume.imageUrl,
+        outfit.outerColor.hex,
+        outfit.bottomColor.hex,
+        costume.id,
+        isOuterCustom,
+        isBottomCustom
+      )
         .then(url => {
           if (isMounted) {
             setRecoloredPhotoUrl(url);
@@ -91,7 +98,7 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id, isDefaultColors]);
+  }, [costume.imageUrl, outfit.outerColor.hex, outfit.bottomColor.hex, costume.id, isOuterCustom, isBottomCustom, isDefaultColors]);
 
   // Tự động chuyển về chế độ Live Realtime khi người dùng đổi màu sắc, trang phục hoặc phụ kiện
   const lastCustomKeyRef = useRef(`${costume.id}-${outfit.outerColor.id}-${outfit.innerColor.id}-${outfit.bottomColor.id}-${outfit.selectedAccessories.join(',')}`);

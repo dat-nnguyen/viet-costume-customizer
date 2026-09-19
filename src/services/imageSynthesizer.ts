@@ -45,12 +45,17 @@ export async function synthesizeCostumePortrait(options: SynthesizerOptions): Pr
   const width = 1200;
   const height = 1600;
 
+  const isOuterCustom = outfit.outerColor.id !== costume.defaultColors.outer;
+  const isBottomCustom = outfit.bottomColor.id !== costume.defaultColors.bottom;
+
   // 1. Biến đổi màu sắc trực tiếp trên ảnh gốc bằng Engine Pixel-Level HSL
   const recoloredImageUrl = await recolorCostumePhoto(
     costume.imageUrl,
     outfit.outerColor.hex,
     outfit.bottomColor.hex,
-    costume.id
+    costume.id,
+    isOuterCustom,
+    isBottomCustom
   );
 
   const canvas = document.createElement('canvas');
