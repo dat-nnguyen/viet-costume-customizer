@@ -1,4 +1,5 @@
 import { SavedLookbook, OutfitState, CulturalScore } from '../types';
+import { getLookbooksEndpoint, getApiHeaders } from './apiConfig';
 
 const STORAGE_KEY = 'viet_costume_customizer_lookbooks_v1';
 
@@ -17,7 +18,9 @@ export function getSavedLookbooks(): SavedLookbook[] {
 // Đồng bộ danh sách Lookbook từ Database (SQLite / Azure PostgreSQL)
 export async function fetchLookbooksFromDB(): Promise<SavedLookbook[]> {
   try {
-    const res = await fetch('/api/lookbooks');
+    const endpoint = getLookbooksEndpoint();
+    const headers = getApiHeaders();
+    const res = await fetch(endpoint, { headers });
     if (res.ok) {
       const data: SavedLookbook[] = await res.json();
       if (Array.isArray(data)) {
@@ -52,10 +55,12 @@ export function saveLookbook(title: string, outfit: OutfitState, score: Cultural
   const updated = [newLookbook, ...lookbooks];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-  // Bất đồng bộ đẩy lên server database
-  fetch('/api/lookbooks', {
+  // Bất đồng bộ đẩy lên server database (Supabase Cloud hoặc Local DB)
+  const endpoint = getLookbooksEndpoint();
+  const headers = getApiHeaders();
+  fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(newLookbook)
   }).catch(err => {
     console.warn('Lỗi khi lưu Lookbook vào Database server:', err);
@@ -70,9 +75,13 @@ export function deleteLookbook(id: string): SavedLookbook[] {
   const updated = lookbooks.filter(lb => lb.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-  // Bất đồng bộ xóa trên server database
-  fetch(`/api/lookbooks/${id}`, {
-    method: 'DELETE'
+  // Bất đồng bộ xóa trên server database (Supabase Cloud hoặc Local DB)
+  const endpoint = getLookbooksEndpoint(id);
+  const headers = getApiHeaders();
+  fetch(endpoint, {
+    method: 'DELETE',
+    headers,
+    body: JSON.stringify({ id })
   }).catch(err => {
     console.warn('Lỗi khi xóa Lookbook khỏi Database server:', err);
   });

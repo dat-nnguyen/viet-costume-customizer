@@ -1,4 +1,5 @@
 import { ChatMessage, ChatActionPayload, CostumeId } from '../types';
+import { getChatEndpoint, getApiHeaders } from './apiConfig';
 
 
 
@@ -46,9 +47,12 @@ export async function streamGeminiChatResponse(
   sessionId: string = 'default_session'
 ): Promise<{ text: string; actionPayload?: ChatActionPayload }> {
   try {
-    const response = await fetch('/api/chat', {
+    const endpoint = getChatEndpoint();
+    const headers = getApiHeaders();
+
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         messages: messages.map(m => ({ sender: m.sender, text: m.text })),
         sessionId

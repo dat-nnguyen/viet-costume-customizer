@@ -10,7 +10,11 @@
     "server": "tsx server/index.ts",
     "build": "tsc -b && vite build",
     "start": "tsx server/index.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link",
+    "supabase:db:push": "supabase db push",
+    "supabase:deploy": "supabase functions deploy chat --no-verify-jwt && supabase functions deploy stylist --no-verify-jwt && supabase functions deploy lookbooks --no-verify-jwt"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

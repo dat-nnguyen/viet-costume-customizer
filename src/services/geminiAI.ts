@@ -1,4 +1,5 @@
 import { AIStylistRecommendation } from '../types';
+import { getStylistEndpoint, getApiHeaders } from './apiConfig';
 
 interface AIStylistRequest {
   occasionId: string;
@@ -119,12 +120,15 @@ export function generateLocalExpertRecommendation(req: AIStylistRequest): AIStyl
   };
 }
 
-// Gọi Backend Server (/api/stylist) để sinh gợi ý bằng Gemini, fallback về Local Expert Engine nếu offline
+// Gọi Backend Server (Supabase Cloud hoặc /api/stylist) để sinh gợi ý bằng Gemini, fallback về Local Expert Engine nếu offline
 export async function generateAIStylistRecommendation(req: AIStylistRequest): Promise<AIStylistRecommendation> {
   try {
-    const response = await fetch('/api/stylist', {
+    const endpoint = getStylistEndpoint();
+    const headers = getApiHeaders();
+
+    const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         occasionId: req.occasionId,
         remixStyleId: req.remixStyleId,
@@ -139,10 +143,10 @@ export async function generateAIStylistRecommendation(req: AIStylistRequest): Pr
         return data as AIStylistRecommendation;
       }
     }
-    console.warn('Backend /api/stylist không trả về kết quả hợp lệ, chuyển sang Local Expert Engine');
+    console.warn('Backend stylist không trả về kết quả hợp lệ, chuyển sang Local Expert Engine');
     return generateLocalExpertRecommendation(req);
   } catch (err) {
-    console.warn('Không thể kết nối /api/stylist backend, chuyển sang Local Expert Engine:', err);
+    console.warn('Không thể kết nối stylist backend, chuyển sang Local Expert Engine:', err);
     return generateLocalExpertRecommendation(req);
   }
 }
