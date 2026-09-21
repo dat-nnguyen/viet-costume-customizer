@@ -124,12 +124,11 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
         faceImageUrl: customFaceUrl || outfit.customFace?.imageUrl
       });
 
-      if (onSaveGeneratedLook) {
-        onSaveGeneratedLook(result.imageUrl);
-      }
-      setShowGeneratedLook(true);
-
       if (result.source === 'banana') {
+        if (onSaveGeneratedLook) {
+          onSaveGeneratedLook(result.imageUrl);
+        }
+        setShowGeneratedLook(true);
         setGenerationSuccessToast(true);
         setBananaToast({
           message: `Đã tạo ảnh chân dung AI mới thành công bằng mô hình ${result.modelUsed || 'Nano Banana'}!`,
@@ -140,12 +139,15 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
           setBananaToast(null);
         }, 5000);
       } else {
+        // Nếu Nano Banana chưa có Quota API (limit: 0):
+        // Giữ nguyên chế độ Studio Người Mẫu Thật để người dùng có trải nghiệm sắc nét nhất
+        setShowGeneratedLook(false);
         if (result.quotaWarning) {
           setBananaToast({
             message: result.quotaWarning,
             isError: true
           });
-          setTimeout(() => setBananaToast(null), 7000);
+          setTimeout(() => setBananaToast(null), 9000);
         } else {
           setGenerationSuccessToast(true);
           setTimeout(() => setGenerationSuccessToast(false), 3500);
@@ -355,23 +357,38 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
               </div>
 
               {/* Toggle giữa Ảnh AI đã tạo vs Chỉnh sửa Realtime */}
-              <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+              <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
                 {outfit.generatedLookUrl ? (
-                  <button
-                    onClick={() => setShowGeneratedLook(!showGeneratedLook)}
-                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border backdrop-blur-md transition-all flex items-center gap-1.5 shadow-xl cursor-pointer ${
-                      showGeneratedLook
-                        ? 'bg-[#e09f3e] text-[#090a0f] border-[#ffd166]'
-                        : 'bg-[#14151f]/90 text-[#ffd166] border-[#ffd166]/40 hover:bg-[#202230]'
-                    }`}
-                  >
-                    <Wand2 className="w-3 h-3" />
-                    <span>{showGeneratedLook ? 'Ảnh AI Đã Tạo (Bấm để sửa Live)' : 'Xem Lại Ảnh AI Đã Tạo'}</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setShowGeneratedLook(!showGeneratedLook)}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border backdrop-blur-md transition-all flex items-center gap-1.5 shadow-xl cursor-pointer ${
+                        showGeneratedLook
+                          ? 'bg-[#e09f3e] text-[#090a0f] border-[#ffd166]'
+                          : 'bg-[#14151f]/90 text-[#ffd166] border-[#ffd166]/40 hover:bg-[#202230]'
+                      }`}
+                    >
+                      <Wand2 className="w-3 h-3" />
+                      <span>{showGeneratedLook ? 'Đang Xem Ảnh AI (Bấm để sửa Live)' : 'Xem Lại Ảnh AI'}</span>
+                    </button>
+                    {showGeneratedLook && (
+                      <button
+                        onClick={() => {
+                          setShowGeneratedLook(false);
+                          if (onSaveGeneratedLook) onSaveGeneratedLook('');
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-[#14151f]/90 hover:bg-red-950/80 text-red-400 border border-red-500/30 backdrop-blur-md transition-all flex items-center gap-1 cursor-pointer shadow-lg"
+                        title="Xoá bản AI này và trở về Người Mẫu Thật Studio chuẩn di sản"
+                      >
+                        <X className="w-3 h-3" />
+                        <span className="hidden sm:inline">Về Mẫu Thật</span>
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <div className="px-2.5 py-1 rounded-xl text-[10px] font-semibold bg-[#2d6a4f]/80 text-[#52b788] border border-[#2d6a4f] flex items-center gap-1.5 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#52b788] animate-pulse" />
-                    <span>Live Photo Recolor</span>
+                    <span>Studio Mẫu Thật (Chuẩn Di Sản)</span>
                   </div>
                 )}
               </div>
