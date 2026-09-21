@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { OutfitState, Costume } from '../types';
-import { synthesizeCostumePortrait } from '../services/imageSynthesizer';
+import { renderAILookbookPortrait } from '../services/imageSynthesizer';
 import { recolorCostumePhoto } from '../services/photoRecolorService';
 import { ACCESSORIES_DATA } from '../data/accessoriesData';
 import { 
@@ -111,21 +111,46 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
     }
   }, [costume.id, outfit.outerColor.id, outfit.innerColor.id, outfit.bottomColor.id, outfit.selectedAccessories]);
 
-  // Sinh ảnh AI Lookbook hoàn chỉnh với mặt và trang phục hiện tại
+  const [bananaToast, setBananaToast] = useState<{ message: string; isError?: boolean } | null>(null);
+
+  // Sinh ảnh AI Lookbook hoàn chỉnh bằng Google Nano Banana hoặc Studio Canvas
   const handleGenerateAILook = async (customFaceUrl?: string) => {
     setIsGeneratingAI(true);
+    setBananaToast(null);
     try {
-      const generated = await synthesizeCostumePortrait({
+      const result = await renderAILookbookPortrait({
         costume,
         outfit,
         faceImageUrl: customFaceUrl || outfit.customFace?.imageUrl
       });
+
       if (onSaveGeneratedLook) {
-        onSaveGeneratedLook(generated);
+        onSaveGeneratedLook(result.imageUrl);
       }
       setShowGeneratedLook(true);
-      setGenerationSuccessToast(true);
-      setTimeout(() => setGenerationSuccessToast(false), 3500);
+
+      if (result.source === 'banana') {
+        setGenerationSuccessToast(true);
+        setBananaToast({
+          message: `Đã tạo ảnh chân dung AI mới thành công bằng mô hình ${result.modelUsed || 'Nano Banana'}!`,
+          isError: false
+        });
+        setTimeout(() => {
+          setGenerationSuccessToast(false);
+          setBananaToast(null);
+        }, 5000);
+      } else {
+        if (result.quotaWarning) {
+          setBananaToast({
+            message: result.quotaWarning,
+            isError: true
+          });
+          setTimeout(() => setBananaToast(null), 7000);
+        } else {
+          setGenerationSuccessToast(true);
+          setTimeout(() => setGenerationSuccessToast(false), 3500);
+        }
+      }
     } catch (err) {
       console.warn('Lỗi khi tạo ảnh AI:', err);
     } finally {
@@ -367,10 +392,22 @@ export const CostumeCanvas: React.FC<CostumeCanvasProps> = ({
               )}
 
               {/* Toast thông báo tạo thành công */}
-              {generationSuccessToast && (
+              {generationSuccessToast && !bananaToast && (
                 <div className="absolute bottom-16 inset-x-4 z-40 bg-[#2d6a4f]/95 border border-[#52b788] text-white py-2 px-3.5 rounded-xl shadow-2xl flex items-center gap-2 animate-fadeIn text-xs">
                   <CheckCircle2 className="w-4 h-4 text-white flex-shrink-0" />
                   <span>Đã tạo ảnh AI thành công với khuôn mặt và bản phối của bạn!</span>
+                </div>
+              )}
+
+              {/* Toast thông báo chi tiết về Google Nano Banana */}
+              {bananaToast && (
+                <div className={`absolute bottom-16 inset-x-4 z-40 border py-2.5 px-3.5 rounded-xl shadow-2xl flex items-start gap-2.5 animate-fadeIn text-xs backdrop-blur-md ${
+                  bananaToast.isError
+                    ? 'bg-[#1e130c]/95 border-[#e09f3e]/80 text-[#ffd166]'
+                    : 'bg-[#153424]/95 border-[#52b788] text-white'
+                }`}>
+                  <Sparkles className="w-4 h-4 text-[#e09f3e] flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed font-medium">{bananaToast.message}</span>
                 </div>
               )}
 

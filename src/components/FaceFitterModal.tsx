@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Costume, OutfitState, CustomFaceConfig } from '../types';
-import { synthesizeCostumePortrait } from '../services/imageSynthesizer';
+import { renderAILookbookPortrait } from '../services/imageSynthesizer';
 import { 
   Camera, 
   Upload, 
@@ -78,7 +78,7 @@ export const FaceFitterModal: React.FC<FaceFitterModalProps> = ({
   const handleGenerateAILook = async (customImg?: string) => {
     setIsGenerating(true);
     try {
-      const generated = await synthesizeCostumePortrait({
+      const result = await renderAILookbookPortrait({
         costume,
         outfit,
         faceImageUrl: customImg || imageUrl,
@@ -88,7 +88,7 @@ export const FaceFitterModal: React.FC<FaceFitterModalProps> = ({
         faceRotation: rotation,
         faceBrightness: brightness
       });
-      setGeneratedPreview(generated);
+      setGeneratedPreview(result.imageUrl);
       setPreviewTab('ai_result');
     } catch (err) {
       console.warn('Lỗi khi tổng hợp ảnh AI:', err);

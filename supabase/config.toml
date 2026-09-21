@@ -423,3 +423,7 @@ verify_jwt = false
 [functions.lookbooks]
 verify_jwt = false
 
+[functions.render]
+verify_jwt = false
+
+

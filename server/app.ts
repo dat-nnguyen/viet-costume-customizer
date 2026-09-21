@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { db, SavedLookbookRecord } from './db.js';
-import { streamChatToResponse, generateStylistRecommendationServer, getApiKey } from './geminiService.js';
+import { streamChatToResponse, generateStylistRecommendationServer, generateBananaImageServer, getApiKey } from './geminiService.js';
 
 dotenv.config();
 
@@ -112,6 +112,27 @@ app.post('/api/stylist', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.warn('Lỗi gọi AI Stylist server:', error.message);
     res.status(500).json({ error: error.message || 'Không thể tạo bản phối' });
+  }
+});
+
+// -------------------------------------------------------------
+// 3.5. AI Image Generation via Banana Models (/api/render)
+// -------------------------------------------------------------
+app.post('/api/render', async (req: Request, res: Response) => {
+  try {
+    const result = await generateBananaImageServer(req.body);
+    if (!result.success && result.quotaExceeded) {
+      res.status(429).json(result);
+      return;
+    }
+    if (!result.success) {
+      res.status(500).json(result);
+      return;
+    }
+    res.json(result);
+  } catch (error: any) {
+    console.warn('Lỗi gọi AI Render server:', error.message);
+    res.status(500).json({ error: error.message || 'Không thể tạo ảnh bằng Banana model' });
   }
 });
 

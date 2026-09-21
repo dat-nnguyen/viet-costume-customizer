@@ -1,6 +1,7 @@
 import { Costume, OutfitState } from '../types';
 import { recolorCostumePhoto } from './photoRecolorService';
 import { ACCESSORIES_DATA } from '../data/accessoriesData';
+import { getRenderEndpoint, getApiHeaders } from './apiConfig';
 
 interface SynthesizerOptions {
   costume: Costume;
@@ -164,4 +165,73 @@ export async function synthesizeCostumePortrait(options: SynthesizerOptions): Pr
 
   // 5. Xuất ra định dạng JPEG chất lượng cao 94%
   return canvas.toDataURL('image/jpeg', 0.94);
+}
+
+export interface BananaRenderResult {
+  imageUrl: string;
+  source: 'banana' | 'canvas';
+  modelUsed?: string;
+  quotaWarning?: string;
+}
+
+/**
+ * Hàm Tổng Hợp Chân Dung AI Cấp Cao:
+ * 1. Gọi trực tiếp mô hình Google "Nano Banana" (nano-banana-pro-preview / gemini-3.1-flash-image) để sinh ảnh AI mới
+ * 2. Nếu tài khoản Google AI Studio chưa có hạn ngạch (Free tier limit: 0) -> Tự động fallback sang Studio Canvas Compositor
+ */
+export async function renderAILookbookPortrait(options: SynthesizerOptions): Promise<BananaRenderResult> {
+  const { costume, outfit, faceImageUrl } = options;
+
+  try {
+    const endpoint = getRenderEndpoint();
+    const headers = getApiHeaders();
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        costume: {
+          id: costume.id,
+          name: costume.name,
+          dynasty: costume.dynasty,
+          description: costume.historicalStory || costume.subTitle
+        },
+        outfit: {
+          outerColor: outfit.outerColor,
+          innerColor: outfit.innerColor,
+          bottomColor: outfit.bottomColor,
+          selectedAccessories: outfit.selectedAccessories
+        },
+        userFaceBase64: faceImageUrl || outfit.customFace?.imageUrl
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data?.success && data?.imageUrl) {
+      return {
+        imageUrl: data.imageUrl,
+        source: 'banana',
+        modelUsed: data.model || 'nano-banana-pro-preview'
+      };
+    }
+
+    const quotaWarning = data?.quotaExceeded
+      ? 'Google Nano Banana: Tài khoản Google AI Studio cần kích hoạt Billing để mở khóa hạn ngạch sinh ảnh. Đang hiển thị bản phối Studio Canvas.'
+      : data?.error;
+
+    const canvasImg = await synthesizeCostumePortrait(options);
+    return {
+      imageUrl: canvasImg,
+      source: 'canvas',
+      quotaWarning
+    };
+  } catch (err: any) {
+    console.warn('Lỗi gọi Nano Banana, fallback sang Canvas Synthesizer:', err);
+    const canvasImg = await synthesizeCostumePortrait(options);
+    return {
+      imageUrl: canvasImg,
+      source: 'canvas',
+      quotaWarning: 'Không thể kết nối dịch vụ Nano Banana. Đã tạo ảnh bằng bộ tổng hợp Studio Canvas.'
+    };
+  }
 }

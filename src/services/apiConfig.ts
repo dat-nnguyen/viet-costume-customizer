@@ -30,6 +30,13 @@ export function getStylistEndpoint(): string {
   return '/api/stylist';
 }
 
+export function getRenderEndpoint(): string {
+  if (isUsingSupabase) {
+    return `${SUPABASE_URL}/functions/v1/render`;
+  }
+  return '/api/render';
+}
+
 export function getLookbooksEndpoint(id?: string): string {
   if (isUsingSupabase) {
     const base = `${SUPABASE_URL}/functions/v1/lookbooks`;
