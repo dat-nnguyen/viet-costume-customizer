@@ -357,12 +357,37 @@ ${customPrompt ? `Additional styling instruction: ${customPrompt}` : ''}
     }
   }
 
+  // Nếu Google Nano Banana không khả dụng hoặc bị giới hạn Quota Free Tier (limit: 0)
+  // -> Tự động chuyển sang mô hình FLUX.1 Realism (100% Miễn Phí, Chân Thực Điện Ảnh, Không Cần Thẻ)
+  console.log('⚡ Google Nano Banana requires billing quota. Activating Free FLUX.1 Realism Engine...');
+  try {
+    const seed = Math.floor(Math.random() * 1000000);
+    const fluxPrompt = encodeURIComponent(
+      `Masterpiece, 8k, photorealistic haute couture portrait of a young Vietnamese person wearing authentic traditional Vietnamese costume: ${costumeName} (${dynasty}), ${costumeName} made of luxurious ${outerColor} traditional silk with intricate embroidery, ${innerColor} inner collar, flowing ${bottomColor} silk pants, ${accessories || 'traditional accessories'}, ancient imperial Hue Citadel courtyard, soft warm lighting, hyperrealistic fabric texture, award-winning fashion photography, 8k`
+    );
+    const fluxEndpoint = `https://image.pollinations.ai/prompt/${fluxPrompt}?width=768&height=1024&model=flux&seed=${seed}&nologo=true`;
+
+    const fluxRes = await fetch(fluxEndpoint);
+    if (fluxRes.ok) {
+      const buffer = await fluxRes.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      return {
+        success: true,
+        imageUrl: `data:image/jpeg;base64,${base64}`,
+        model: 'FLUX.1 Realism (Miễn Phí 100%)',
+        provider: 'flux'
+      };
+    }
+  } catch (fluxErr: any) {
+    console.warn('Lỗi gọi FLUX fallback server:', fluxErr?.message);
+  }
+
   const isQuota = lastError?.code === 429 || lastError?.status === 'RESOURCE_EXHAUSTED' || String(lastError?.message).includes('quota');
   return {
     success: false,
     quotaExceeded: isQuota,
     error: isQuota 
-      ? 'Google Nano Banana yêu cầu API Key có hạn ngạch (Billing/Pay-As-You-Go). Đang tự động chuyển sang chế độ Studio Canvas chất lượng cao.'
+      ? 'Google Nano Banana yêu cầu kích hoạt Billing trên Google AI Studio. Đang chuyển sang chế độ Studio Canvas chất lượng cao.'
       : (lastError?.message || 'Không thể tạo ảnh bằng Nano Banana model')
   };
 }
